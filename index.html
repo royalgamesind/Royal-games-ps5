@@ -2,62 +2,51 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>👑 Royal Games Business Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal Games Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{margin:0;background:#0b0f1a;color:#fff;font-family:Roboto,sans-serif}
-.header{background:linear-gradient(90deg,#111827,#1e293b);padding:20px;text-align:center;border-bottom:4px solid gold}
-.header h1{color:gold;margin:0}
-.section{padding:20px}
-.card{background:#111827;border-radius:18px;padding:20px;margin:15px 0;box-shadow:0 0 15px rgba(0,255,255,.1)}
-h2{color:#facc15;margin-top:0}
-input,select,button{padding:10px;border-radius:8px;border:none;margin-top:8px}
-input,select{background:#1f2937;color:white}
-button{background:#22c55e;color:white;font-weight:bold;cursor:pointer}
-button:hover{background:#16a34a}
-.tableBox{max-height:260px;overflow-y:auto;margin-top:10px}
+body{margin:0;font-family:Arial;background:#0b0f1a;color:#fff;padding:20px}
+h1{color:gold}
+.card{background:#111827;padding:15px;border-radius:15px;margin-bottom:20px}
 table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #333;font-size:13px;text-align:left}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:left;font-size:14px}
 th{color:#38bdf8}
-.cancelBtn{background:#e53935;padding:5px 8px;font-size:12px}
-.expand{cursor:pointer;color:#38bdf8;margin-top:10px;display:inline-block}
-#loginBox{position:fixed;inset:0;background:#000;display:flex;justify-content:center;align-items:center}
-#loginInner{background:#111827;padding:30px;border-radius:20px;text-align:center;width:300px}
+button{padding:6px 10px;border:none;border-radius:8px;cursor:pointer}
+.danger{background:#e53935;color:#fff}
+.scroll{max-height:300px;overflow-y:auto}
+select,input{padding:6px;border-radius:8px;border:none;margin:5px 0}
+#loginBox{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#loginBox div{background:#111827;padding:25px;border-radius:15px;text-align:center}
 </style>
 </head>
 <body>
 
 <div id="loginBox">
-<div id="loginInner">
-<h2>👑 Admin Login</h2>
-<input type="password" id="adminPass" placeholder="Enter Password">
-<button onclick="login()">Login</button>
-<p id="loginError" style="color:red"></p>
+<div>
+<h2>Admin Login</h2>
+<input type="password" id="pass" placeholder="Enter Password"><br><br>
+<button onclick="login()">Enter</button>
+<p id="err" style="color:red"></p>
 </div>
 </div>
 
-<div class="header">
-<h1>Royal Games Business Dashboard</h1>
-</div>
-
-<div class="section">
+<h1>👑 Royal Games Admin</h1>
 
 <!-- SEARCH -->
 <div class="card">
-<h2>🔍 Search Booking</h2>
-<input type="text" id="searchBox" placeholder="Name / Phone / ID">
+<h2>Search Booking</h2>
+<input type="text" id="searchInput" placeholder="Name or ID">
 <button onclick="searchBooking()">Search</button>
-<div class="tableBox">
+<div class="scroll">
 <table>
 <thead>
 <tr>
 <th>ID</th><th>Name</th><th>Phone</th><th>Console</th>
-<th>Date</th><th>Days</th><th>Coupon</th>
-<th>Discount</th><th>Final ₹</th><th>Action</th>
+<th>Date</th><th>Days</th><th>Final ₹</th><th>Action</th>
 </tr>
 </thead>
 <tbody id="searchResult"></tbody>
@@ -67,14 +56,13 @@ th{color:#38bdf8}
 
 <!-- RECENT 5 -->
 <div class="card">
-<h2>🕒 Recent 5 Bookings</h2>
-<div class="tableBox">
+<h2>Recent 5 Bookings</h2>
+<div class="scroll">
 <table>
 <thead>
 <tr>
 <th>ID</th><th>Name</th><th>Phone</th><th>Console</th>
-<th>Date</th><th>Days</th><th>Coupon</th>
-<th>Discount</th><th>Final ₹</th><th>Action</th>
+<th>Date</th><th>Days</th><th>Final ₹</th><th>Action</th>
 </tr>
 </thead>
 <tbody id="recentTable"></tbody>
@@ -82,102 +70,42 @@ th{color:#38bdf8}
 </div>
 </div>
 
-<!-- 10 DAYS -->
+<!-- 10 DAY PERFORMANCE -->
 <div class="card">
-<h2>📊 Last 10 Days Performance</h2>
-<div id="tenSummary"></div>
-<div id="tenDetails" style="display:none;margin-top:10px"></div>
-<div class="expand" onclick="toggleTen()">View Details</div>
+<h2>Last 10 Days Performance</h2>
+<div id="tenDaysData"></div>
 </div>
 
-<!-- MONTHLY LIVE -->
+<!-- MONTHLY -->
 <div class="card">
-<h2>📅 Current Month Report</h2>
-<div id="monthlyLive"></div>
+<h2>Monthly Performance</h2>
+<input type="month" id="monthSelect" onchange="monthlyCalc()">
+<div id="monthlyResult"></div>
 </div>
 
-<!-- SELECT MONTH -->
+<!-- YEARLY -->
 <div class="card">
-<h2>📆 Select Month Performance</h2>
-<select id="monthSelect"></select>
-<select id="yearSelect"></select>
-<br>
-<button onclick="calculateMonth()">Calculate Month</button>
-<button onclick="saveMonth()">Save Month</button>
-<button onclick="viewMonth()">View Saved</button>
-<div id="monthOutput"></div>
-</div>
-
-<!-- SELECT YEAR -->
-<div class="card">
-<h2>📈 Select Year Performance</h2>
-<select id="yearOnly"></select><br>
-<button onclick="calculateYear()">Calculate Year</button>
-<button onclick="saveYear()">Save Year</button>
-<button onclick="viewYear()">View Saved</button>
-<div id="yearOutput"></div>
-</div>
-
-<!-- REPEAT -->
-<div class="card">
-<h2>👥 Repeat Customers</h2>
-<div id="repeatData"></div>
-</div>
-
-<!-- REVIEW -->
-<div class="card">
-<h2>⭐ Review Analytics</h2>
-<div id="reviewData"></div>
-</div>
-
+<h2>Yearly Performance</h2>
+<select id="yearSelect" onchange="yearlyCalc()"></select>
+<div id="yearlyResult"></div>
 </div>
 
 <script>
-
 const firebaseConfig={
-apiKey:"AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-authDomain:"royalgamesproject.firebaseapp.com",
-databaseURL:"https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId:"royalgamesproject",
-storageBucket:"royalgamesproject.firebasestorage.app",
-messagingSenderId:"1008609758558",
-appId:"1:1008609758558:web:7aa12cdef2b066ad7393cf"
+databaseURL:"https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+var db=firebase.database();
 
 function login(){
-if(document.getElementById("adminPass").value==="YUVRAJ01"){
+if(document.getElementById("pass").value==="YUVRAJ01"){
 document.getElementById("loginBox").style.display="none";
-init();
-}else{
-document.getElementById("loginError").innerText="Wrong Password";
-}
-}
-
-function init(){
 loadRecent();
-loadTenDays();
-loadMonthlyLive();
-loadRepeat();
-loadReviews();
-populateSelectors();
+loadYears();
+tenDays();
+}else{
+document.getElementById("err").innerText="Wrong Password";
 }
-
-function createRow(id,d){
-return `<tr>
-<td>${id}</td>
-<td>${d.name}</td>
-<td>${d.phone}</td>
-<td>${d.console}</td>
-<td>${d.startDate}</td>
-<td>${d.days}</td>
-<td>${d.coupon||'None'}</td>
-<td>₹${d.discount||0}</td>
-<td>₹${d.finalPrice}</td>
-<td><button class="cancelBtn" onclick="cancelBooking('${id}')">Cancel</button></td>
-</tr>`;
 }
 
 function cancelBooking(id){
@@ -187,211 +115,106 @@ db.ref("bookings/"+id).remove();
 }
 
 function searchBooking(){
-let val=document.getElementById("searchBox").value.toLowerCase();
-let box=document.getElementById("searchResult");
-box.innerHTML="";
+let val=document.getElementById("searchInput").value.toLowerCase();
 db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let id=child.key;
-if(id.toLowerCase().includes(val)||
-(d.name&&d.name.toLowerCase().includes(val))||
-(d.phone&&d.phone.includes(val))){
-box.innerHTML+=createRow(id,d);
+let html="";
+snap.forEach(c=>{
+let d=c.val();
+if(c.key.toLowerCase().includes(val) || d.name.toLowerCase().includes(val)){
+html+=row(c.key,d);
 }
 });
+document.getElementById("searchResult").innerHTML=html||"<tr><td colspan='8'>No Result</td></tr>";
 });
 }
 
 function loadRecent(){
-db.ref("bookings").limitToLast(5).once("value",snap=>{
+db.ref("bookings").limitToLast(5).on("value",snap=>{
 let html="";
-snap.forEach(child=>{
-html+=createRow(child.key,child.val());
+snap.forEach(c=>{
+html=row(c.key,c.val())+html;
 });
 document.getElementById("recentTable").innerHTML=html;
 });
 }
 
-function loadTenDays(){
-let total=0,count=0,details="";
+function row(id,d){
+return `<tr>
+<td>${id}</td>
+<td>${d.name}</td>
+<td>${d.phone}</td>
+<td>${d.console}</td>
+<td>${d.startDate}</td>
+<td>${d.days}</td>
+<td>${d.finalPrice}</td>
+<td><button class='danger' onclick="cancelBooking('${id}')">Cancel</button></td>
+</tr>`;
+}
+
+function tenDays(){
+db.ref("bookings").once("value",snap=>{
 let today=new Date();
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let diff=(today-new Date(d.startDate))/(1000*3600*24);
+let total=0,count=0;
+snap.forEach(c=>{
+let d=c.val();
+let date=new Date(d.startDate);
+let diff=(today-date)/(1000*60*60*24);
 if(diff<=10){
+total+=Number(d.finalPrice||0);
 count++;
-total+=Number(d.finalPrice);
-details+=`${d.name} - ₹${d.finalPrice}<br>`;
 }
 });
-document.getElementById("tenSummary").innerHTML=
+document.getElementById("tenDaysData").innerHTML=
+`Bookings: ${count}<br>Total Earned: ₹${total}`;
+});
+}
+
+function monthlyCalc(){
+let month=document.getElementById("monthSelect").value;
+if(!month) return;
+db.ref("bookings").once("value",snap=>{
+let total=0,count=0;
+snap.forEach(c=>{
+let d=c.val();
+if(d.startDate && d.startDate.startsWith(month)){
+total+=Number(d.finalPrice||0);
+count++;
+}
+});
+document.getElementById("monthlyResult").innerHTML=
 `Total Bookings: ${count}<br>Total Revenue: ₹${total}`;
-document.getElementById("tenDetails").innerHTML=details||"No data";
 });
 }
 
-function toggleTen(){
-let d=document.getElementById("tenDetails");
-d.style.display=d.style.display==="none"?"block":"none";
+function loadYears(){
+let currentYear=new Date().getFullYear();
+let select=document.getElementById("yearSelect");
+for(let y=currentYear;y>=2023;y--){
+let opt=document.createElement("option");
+opt.value=y;
+opt.innerText=y;
+select.appendChild(opt);
+}
 }
 
-function loadMonthlyLive(){
-let now=new Date();
-let m=now.getMonth()+1;
-let y=now.getFullYear();
-calculateMonthData(m,y,"monthlyLive");
-}
-
-function calculateMonthData(m,y,target){
+function yearlyCalc(){
+let year=document.getElementById("yearSelect").value;
+db.ref("bookings").once("value",snap=>{
 let total=0,count=0;
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let date=new Date(d.startDate);
-if(date.getMonth()+1==m && date.getFullYear()==y){
+snap.forEach(c=>{
+let d=c.val();
+if(d.startDate && d.startDate.startsWith(year)){
+total+=Number(d.finalPrice||0);
 count++;
-total+=Number(d.finalPrice);
 }
 });
-document.getElementById(target).innerHTML=
-`Bookings: ${count}<br>Revenue: ₹${total}`;
+document.getElementById("yearlyResult").innerHTML=
+`Total Bookings: ${count}<br>Total Revenue: ₹${total}`;
 });
 }
-
-function populateSelectors(){
-let mSel=document.getElementById("monthSelect");
-let ySel=document.getElementById("yearSelect");
-let yOnly=document.getElementById("yearOnly");
-
-for(let i=1;i<=12;i++){
-mSel.innerHTML+=`<option value="${i}">${i}</option>`;
-}
-for(let y=2024;y<=2030;y++){
-ySel.innerHTML+=`<option value="${y}">${y}</option>`;
-yOnly.innerHTML+=`<option value="${y}">${y}</option>`;
-}
-}
-
-function calculateMonth(){
-let m=document.getElementById("monthSelect").value;
-let y=document.getElementById("yearSelect").value;
-calculateMonthData(m,y,"monthOutput");
-}
-
-function saveMonth(){
-let m=document.getElementById("monthSelect").value;
-let y=document.getElementById("yearSelect").value;
-let key=`${y}-${m}`;
-let total=0,count=0;
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let date=new Date(d.startDate);
-if(date.getMonth()+1==m && date.getFullYear()==y){
-count++;
-total+=Number(d.finalPrice);
-}
-});
-db.ref("performanceMonthly/"+key).set({count,total});
-alert("Saved!");
-});
-}
-
-function viewMonth(){
-let m=document.getElementById("monthSelect").value;
-let y=document.getElementById("yearSelect").value;
-let key=`${y}-${m}`;
-db.ref("performanceMonthly/"+key).once("value",snap=>{
-if(snap.exists()){
-let d=snap.val();
-document.getElementById("monthOutput").innerHTML=
-`Saved Bookings: ${d.count}<br>Saved Revenue: ₹${d.total}`;
-}else{
-alert("No saved record");
-}
-});
-}
-
-function calculateYear(){
-let y=document.getElementById("yearOnly").value;
-let total=0,count=0;
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let date=new Date(d.startDate);
-if(date.getFullYear()==y){
-count++;
-total+=Number(d.finalPrice);
-}
-});
-document.getElementById("yearOutput").innerHTML=
-`Bookings: ${count}<br>Revenue: ₹${total}`;
-});
-}
-
-function saveYear(){
-let y=document.getElementById("yearOnly").value;
-let total=0,count=0;
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let date=new Date(d.startDate);
-if(date.getFullYear()==y){
-count++;
-total+=Number(d.finalPrice);
-}
-});
-db.ref("performanceYearly/"+y).set({count,total});
-alert("Year Saved!");
-});
-}
-
-function viewYear(){
-let y=document.getElementById("yearOnly").value;
-db.ref("performanceYearly/"+y).once("value",snap=>{
-if(snap.exists()){
-let d=snap.val();
-document.getElementById("yearOutput").innerHTML=
-`Saved Bookings: ${d.count}<br>Saved Revenue: ₹${d.total}`;
-}else{
-alert("No saved year record");
-}
-});
-}
-
-function loadRepeat(){
-let map={},html="";
-db.ref("bookings").once("value",snap=>{
-snap.forEach(child=>{
-let p=child.val().phone;
-map[p]=map[p]?map[p]+1:1;
-});
-for(let p in map){
-if(map[p]>1) html+=`${p} - ${map[p]} bookings<br>`;
-}
-document.getElementById("repeatData").innerHTML=html||"No repeat customers";
-});
-}
-
-function loadReviews(){
-db.ref("reviews").once("value",snap=>{
-let total=0,good=0,bad=0;
-snap.forEach(child=>{
-let r=child.val();
-total++;
-if(r.rating>=4) good++; else bad++;
-});
-document.getElementById("reviewData").innerHTML=
-`Total Reviews: ${total}<br>Positive: ${good}<br>Needs Improvement: ${bad}`;
-});
-}
-
 </script>
 </body>
 </html>
-
 
 
 
