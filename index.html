@@ -78,14 +78,12 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 
 <script>
 
+/******** FIREBASE ********/
 const firebaseConfig = {
-  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-  authDomain: "royalgamesproject.firebaseapp.com",
-  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "royalgamesproject",
-  storageBucket: "royalgamesproject.firebasestorage.app",
-  messagingSenderId: "1008609758558",
-  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  databaseURL: "YOUR_DB_URL",
+  projectId: "YOUR_PROJECT_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -107,6 +105,7 @@ document.getElementById("loginError").innerText="Wrong Password";
 /******** AUTO COMPLETE ********/
 function autoCompleteBookings(){
 let today=new Date();
+
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let id=c.key;
@@ -128,6 +127,11 @@ db.ref("bookings/"+id).update({status:"Completed"});
 /******** TABLE ROW ********/
 function rowHTML(id,d){
 let status=d.status||"Active";
+
+let actionButton = status==="Cancelled"
+? `<button onclick="restoreBooking('${id}')">Restore</button>`
+: `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
+
 return `<tr>
 <td>${id}</td>
 <td>${d.name||''}</td>
@@ -137,7 +141,7 @@ return `<tr>
 <td>${d.days||''}</td>
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
-<td><button class="danger" onclick="cancelBooking('${id}')">Cancel</button></td>
+<td>${actionButton}</td>
 </tr>`;
 }
 
@@ -156,6 +160,7 @@ document.getElementById("recentTable").innerHTML=html;
 /******** SEARCH ********/
 function searchBooking(){
 let val=document.getElementById("searchBox").value.toLowerCase();
+
 db.ref("bookings").once("value",snap=>{
 let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
@@ -179,42 +184,59 @@ db.ref("bookings/"+id).update({status:"Cancelled"});
 }
 }
 
-/******** 10 DAYS ********/
+/******** RESTORE ********/
+function restoreBooking(id){
+db.ref("bookings/"+id).update({status:"Active"});
+}
+
+/******** 10 DAYS FIXED ********/
 function tenDays(){
 let total=0,count=0;
 let today=new Date();
+
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
 if(d.status!=="Completed") return;
-let bd=new Date(d.startDate);
-let diff=(today-bd)/(1000*60*60*24);
-if(diff<=10) {
+if(!d.startDate||!d.days) return;
+
+let start=new Date(d.startDate);
+let end=new Date(start);
+end.setDate(start.getDate()+Number(d.days));
+
+let diff=(today-end)/(1000*60*60*24);
+
+if(diff<=10 && diff>=0){
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
+
 document.getElementById("tenDaysData").innerHTML=
 `Total Completed: ${count}<br>Total Earnings: ₹${total}`;
 });
 }
 
-/******** SELECTORS ********/
+/******** SELECTORS (SAFE FIX) ********/
 function populateSelectors(){
 for(let m=1;m<=12;m++){
-monthSelect.innerHTML+=`<option value="${m}">${m}</option>`;
+document.getElementById("monthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
 }
+
 let currentYear=new Date().getFullYear();
 for(let y=currentYear;y>=2023;y--){
-yearSelect.innerHTML+=`<option>${y}</option>`;
-yearOnlySelect.innerHTML+=`<option>${y}</option>`;
+document.getElementById("yearSelect").innerHTML+=
+`<option>${y}</option>`;
+document.getElementById("yearOnlySelect").innerHTML+=
+`<option>${y}</option>`;
 }
 }
 
 /******** MONTHLY ********/
 function calculateMonthly(){
-let m=monthSelect.value;
-let y=yearSelect.value;
+let m=document.getElementById("monthSelect").value;
+let y=document.getElementById("yearSelect").value;
 let total=0,completed=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
@@ -231,7 +253,8 @@ completed++;
 if(d.status==="Cancelled") cancelled++;
 }
 });
-monthlyResult.innerHTML=
+
+document.getElementById("monthlyResult").innerHTML=
 `Completed: ${completed}<br>
 Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
@@ -240,7 +263,7 @@ Revenue: ₹${total}`;
 
 /******** YEARLY ********/
 function calculateYearly(){
-let y=yearOnlySelect.value;
+let y=document.getElementById("yearOnlySelect").value;
 let total=0,completed=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
@@ -256,8 +279,10 @@ completed++;
 }
 if(d.status==="Cancelled") cancelled++;
 }
-});
-yearlyResult.innerHTML=
+}
+);
+
+document.getElementById("yearlyResult").innerHTML=
 `Completed: ${completed}<br>
 Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
@@ -267,5 +292,13 @@ Revenue: ₹${total}`;
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
