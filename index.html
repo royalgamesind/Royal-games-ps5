@@ -136,7 +136,12 @@ let status=d.status||"Active";
 let actionButton = status==="Cancelled"
 ? `<button onclick="restoreBooking('${id}')">Restore</button>`
 : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
-
+function deleteBooking(id){
+if(confirm("Are you sure you want to permanently delete this booking?")){
+db.ref("bookings/"+id).remove();
+}
+  }
+  
 return `<tr>
 <td>${id}</td>
 <td>${d.name||''}</td>
