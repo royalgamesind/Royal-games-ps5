@@ -1,314 +1,235 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Royal Games Admin Panel</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto&display=swap" rel="stylesheet">
-
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:'Roboto',sans-serif;background:#0b0f1a;color:#fff}
-.header{background:linear-gradient(90deg,#111827,#1e293b);padding:25px;text-align:center;border-bottom:4px solid gold}
-.header h1{margin:0;font-family:'Orbitron';color:gold;letter-spacing:3px}
-.section{padding:25px}
-.card{background:#111827;border-radius:20px;padding:20px;margin:15px 0;box-shadow:0 0 20px rgba(0,255,255,.1)}
-.card:hover{box-shadow:0 0 25px rgba(0,255,255,.3)}
-input,button{padding:12px;border-radius:12px;border:none;margin-top:8px}
-input{width:95%;background:#1f2937;color:#fff}
-button{background:#22c55e;color:#fff;cursor:pointer;font-weight:bold}
-button:hover{background:#16a34a}
-button.danger{background:#e53935}
-#loginBox{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:999}
-#loginBox .inner{background:#111827;padding:30px;border-radius:20px;text-align:center}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
-.gold{color:gold;font-family:'Orbitron'}
+body{font-family:Arial;background:#111;color:#fff;margin:0;padding:20px}
+h1,h2{margin-top:30px}
+.card{background:#1e1e1e;padding:15px;border-radius:12px;margin:15px 0}
+input,button{padding:8px;border-radius:6px;border:none}
+input{background:#222;color:#fff}
+button{background:#4CAF50;color:#fff;cursor:pointer}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
+.scroll-box{max-height:250px;overflow-y:auto}
+.hidden{display:none}
+#loginBox{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+#loginBox .inner{background:#1e1e1e;padding:30px;border-radius:14px;text-align:center}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginBox">
-  <div class="inner">
-    <h2 class="gold">Royal Games Admin</h2>
-    <input type="password" id="adminPass" placeholder="Enter Admin Password">
-    <br><br>
-    <button onclick="checkPassword()">Enter Dashboard</button>
-    <p id="loginError" style="color:red"></p>
-  </div>
+<div class="inner">
+<h2>Admin Login</h2>
+<input type="password" id="adminPass" placeholder="Enter Password">
+<br><br>
+<button onclick="checkPassword()">Enter</button>
+<p id="loginError" style="color:red"></p>
+</div>
 </div>
 
-<div class="header">
-<h1>👑 ROYAL GAMES ADMIN PANEL</h1>
+<h1>Royal Games Dashboard</h1>
+
+<!-- RECENT BOOKINGS -->
+<h2>Recent 5 Bookings</h2>
+<div class="card scroll-box">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Console</th>
+<th>Start Date</th>
+<th>Final ₹</th>
+<th>Coupon</th>
+</tr>
+</thead>
+<tbody id="recentBookings"></tbody>
+</table>
 </div>
 
-<div class="section">
-
-<!-- SUMMARY -->
-<h2 class="gold">Business Summary</h2>
-<div class="summary-grid">
-<div class="card">Total Bookings<br><h2 id="totalBookings">0</h2></div>
-<div class="card">Monthly Revenue<br><h2>₹<span id="monthlyRevenue">0</span></h2></div>
-<div class="card">Estimated Cost<br><h2>₹<span id="monthlyCost">0</span></h2></div>
-<div class="card">Net Profit<br><h2 style="color:#22c55e">₹<span id="monthlyProfit">0</span></h2></div>
-</div>
-function searchBooking(){
-let val=document.getElementById('searchBox').value.toLowerCase();
-
-db.ref('bookings').once('value',snap=>{
-let found=false;
-let html='';
-
-snap.forEach(child=>{
-let d=child.val();
-let id=child.key;
-
-if(id.toLowerCase().includes(val) || (d.name && d.name.toLowerCase().includes(val))){
-
-found=true;
-
-html+=`
+<!-- 10 DAY EARNINGS -->
+<h2>Last 10 Days Earnings</h2>
 <div class="card">
-<b>ID:</b> ${id}<br>
-<b>Name:</b> ${d.name}<br>
-<b>Phone:</b> ${d.phone}<br>
-<b>Console:</b> ${d.console || "N/A"}<br>
-<b>Date:</b> ${d.startDate || d.date || "N/A"}<br>
-<b>Days:</b> ${d.days || 1}<br>
-<b>Total Price:</b> ₹${d.finalPrice || d.price || 0}<br><br>
-
-<button class="danger" onclick="cancelBooking('${id}')">Cancel Booking</button>
+<button onclick="toggleTenDays()">Show Details</button>
+<div id="tenDaysBox" class="hidden"></div>
 </div>
-`;
-}
-});
 
-if(!found){
-html="<div class='card' style='color:red'>No booking found</div>";
-}
+<!-- MONTHLY REPORT -->
+<h2>Monthly Business Report</h2>
+<div class="card" id="monthlyReport"></div>
 
-document.getElementById('searchResult').innerHTML=html;
-
-});
-}
-  
-
-
-<!-- BOOKINGS -->
-<h2 class="gold">All Bookings</h2>
-<div id="bookingList"></div>
-
-<!-- VIP -->
-<h2 class="gold">VIP Customers</h2>
-<div id="repeatCustomers"></div>
-
-<!-- GRAPHS -->
-<h2 class="gold">Bookings Last 10 Days</h2>
-<canvas id="bookingChart"></canvas>
-
-<h2 class="gold">Monthly Revenue Graph</h2>
-<canvas id="monthlyRevenueChart"></canvas>
-
-<!-- AI -->
-<h2 class="gold">Royal AI Brain</h2>
-<input type="text" id="aiQuestion" placeholder="Ask about growth, profit, upgrade">
-<button onclick="askAI()">Ask AI</button>
-<div id="aiAnswer" style="margin-top:15px"></div>
-
-</div>
+<!-- AI BRAIN -->
+<h2>Royal Games AI Brain 🧠</h2>
+<input type="text" id="aiQuestion" placeholder="Ask about growth, profit, upgrade...">
+<button onclick="askAI()">Ask</button>
+<div class="card" id="aiAnswer"></div>
 
 <script>
-const firebaseConfig={
-apiKey:"AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-authDomain:"royalgamesproject.firebaseapp.com",
-databaseURL:"https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId:"royalgamesproject",
-storageBucket:"royalgamesproject.firebasestorage.app",
-messagingSenderId:"1008609758558",
-appId:"1:1008609758558:web:7aa12cdef2b066ad7393cf"
-};
-firebase.initializeApp(firebaseConfig);
-var db=firebase.database();
 
-/* LOGIN */
+const firebaseConfig = {
+  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
+  authDomain: "royalgamesproject.firebaseapp.com",
+  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "royalgamesproject",
+  storageBucket: "royalgamesproject.firebasestorage.app",
+  messagingSenderId: "1008609758558",
+  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+};
+
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+let allBookings=[];
+
 function checkPassword(){
-if(document.getElementById('adminPass').value==='YUVRAJ01'){
-document.getElementById('loginBox').style.display='none';
+if(document.getElementById('adminPass').value==="YUVRAJ01"){
+document.getElementById('loginBox').style.display="none";
 loadAll();
 }else{
 document.getElementById('loginError').innerText="Wrong Password";
 }
 }
 
-/* LOAD ALL */
 function loadAll(){
-loadBookings();
-detectCustomers();
-bookingGraph();
-loadMonthlySummary();
-monthlyRevenueGraph();
-}
-
-/* BOOKINGS */
-function loadBookings(){
-db.ref('bookings').on('value',snap=>{
-let html='';
+db.ref("bookings").once("value",snap=>{
+allBookings=[];
 snap.forEach(child=>{
-let d=child.val();
-let id=child.key;
-html+=`<div class="card">
-<b>ID:</b> ${id}<br>
-<b>Name:</b> ${d.name}<br>
-<b>Phone:</b> ${d.phone}<br>
-<b>Date:</b> ${d.startDate||d.date}<br>
-<b>Days:</b> ${d.days||1}<br>
-<b>Price:</b> ₹${d.finalPrice||d.price||0}<br><br>
-<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>
-</div>`;
+allBookings.push(child.val());
 });
-document.getElementById('bookingList').innerHTML=html||"No bookings";
+
+allBookings.sort((a,b)=>b.timestamp-a.timestamp);
+
+loadRecent();
+loadTenDays();
+loadMonthly();
 });
 }
 
-function cancelBooking(id){
-if(confirm("Cancel booking?")){
-db.ref('bookings/'+id).remove();
-}
-}
-
-/* SEARCH */
-function searchBooking(){
-let val=document.getElementById('searchBox').value.toLowerCase();
-db.ref('bookings').once('value',snap=>{
-let html='';
-snap.forEach(child=>{
-let d=child.val();
-let id=child.key;
-if(id.toLowerCase().includes(val)||d.name.toLowerCase().includes(val)){
-html+=`<div class="card">${d.name} - ₹${d.finalPrice||d.price||0}</div>`;
-}
+function loadRecent(){
+let html="";
+let recent=allBookings.slice(0,5);
+recent.forEach(b=>{
+html+=`
+<tr>
+<td>${b.name}</td>
+<td>${b.console}</td>
+<td>${b.startDate}</td>
+<td>₹${b.finalPrice}</td>
+<td>${b.coupon||"No"}</td>
+</tr>`;
 });
-document.getElementById('searchResult').innerHTML=html||"No booking found";
-});
+document.getElementById("recentBookings").innerHTML=html;
 }
 
-/* VIP */
-function detectCustomers(){
-let customers={};
-db.ref('bookings').once('value',snap=>{
-snap.forEach(child=>{
-let d=child.val();
-if(customers[d.phone]) customers[d.phone].count++;
-else customers[d.phone]={name:d.name,count:1};
-});
-let html='';
-for(let p in customers){
-if(customers[p].count>1){
-html+=`<div class="card">${customers[p].name} (${p}) - ${customers[p].count} bookings</div>`;
-}
-}
-document.getElementById('repeatCustomers').innerHTML=html||"No VIP yet";
-});
+function toggleTenDays(){
+let box=document.getElementById("tenDaysBox");
+box.classList.toggle("hidden");
 }
 
-/* 10 DAY GRAPH */
-function bookingGraph(){
-let days={},today=new Date();
-for(let i=9;i>=0;i--){
-let d=new Date(); d.setDate(today.getDate()-i);
-days[d.toLocaleDateString()]=0;
+function loadTenDays(){
+let today=new Date();
+let total=0;
+let html="<br>";
+
+allBookings.forEach(b=>{
+let d=new Date(b.startDate);
+let diff=(today-d)/(1000*60*60*24);
+if(diff<=10){
+total+=Number(b.finalPrice);
+html+=`${b.name} - ₹${b.finalPrice}<br>`;
 }
-db.ref('bookings').once('value',snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let key=new Date(d.startDate||d.date).toLocaleDateString();
-if(days[key]!=undefined) days[key]++;
 });
-new Chart(document.getElementById('bookingChart'),{
-type:'line',
-data:{labels:Object.keys(days),
-datasets:[{label:'Bookings',data:Object.values(days),borderWidth:3}]}
-});
-});
+
+html+=`<br><b>Total Last 10 Days: ₹${total}</b>`;
+document.getElementById("tenDaysBox").innerHTML=html;
 }
 
-/* MONTHLY SUMMARY */
-function loadMonthlySummary(){
-let total=0,rev=0,cost=0;
-let now=new Date();
-db.ref('bookings').once('value',snap=>{
-snap.forEach(child=>{
-let d=child.val();
-total++;
-let date=new Date(d.startDate||d.date);
-if(date.getMonth()===now.getMonth()){
-let price=Number(d.finalPrice||d.price||0);
-rev+=price;
-cost+=200;
-}
-});
-let profit=rev-cost;
-document.getElementById('totalBookings').innerText=total;
-document.getElementById('monthlyRevenue').innerText=rev;
-document.getElementById('monthlyCost').innerText=cost;
-document.getElementById('monthlyProfit').innerText=profit;
-});
+function loadMonthly(){
+let month=new Date().toISOString().slice(0,7);
+let total=0;
+let totalBooking=0;
+let couponCount=0;
+let totalDiscount=0;
+let noCouponRevenue=0;
+let repeatCount={};
+
+allBookings.forEach(b=>{
+if(b.startDate.startsWith(month)){
+totalBooking++;
+total+=Number(b.finalPrice);
+
+if(b.coupon && b.coupon!=="N/A"){
+couponCount++;
+totalDiscount+=Number(b.discount||0);
+}else{
+noCouponRevenue+=Number(b.finalPrice);
 }
 
-/* MONTHLY GRAPH */
-function monthlyRevenueGraph(){
-let monthly={};
-db.ref('bookings').once('value',snap=>{
-snap.forEach(child=>{
-let d=child.val();
-let date=new Date(d.startDate||d.date);
-let key=date.toLocaleString('default',{month:'short'});
-let price=Number(d.finalPrice||d.price||0);
-if(!monthly[key]) monthly[key]=0;
-monthly[key]+=price;
+if(repeatCount[b.phone]) repeatCount[b.phone]++;
+else repeatCount[b.phone]=1;
+}
 });
-new Chart(document.getElementById('monthlyRevenueChart'),{
-type:'bar',
-data:{labels:Object.keys(monthly),
-datasets:[{label:'Revenue',data:Object.values(monthly),borderWidth:2}]}
-});
-});
+
+let repeatPeople=0;
+for(let p in repeatCount){
+if(repeatCount[p]>1) repeatPeople++;
 }
 
-/* FREE AI */
+document.getElementById("monthlyReport").innerHTML=`
+Total Bookings: ${totalBooking}<br>
+Total Revenue: ₹${total}<br>
+Coupon Used: ${couponCount} times<br>
+Total Coupon Discount: ₹${totalDiscount}<br>
+Revenue Without Coupon: ₹${noCouponRevenue}<br>
+Repeat Customers This Month: ${repeatPeople}
+`;
+}
+
 function askAI(){
-let q=document.getElementById('aiQuestion').value.toLowerCase();
-db.ref('bookings').once('value',snap=>{
-let total=0,rev=0;
-snap.forEach(c=>{
-total++;
-rev+=Number(c.val().finalPrice||c.val().price||0);
-});
-let avg=(total?rev/total:0).toFixed(2);
-let reply=`Total Bookings: ${total}<br>Total Revenue: ₹${rev}<br>Average: ₹${avg}<br><br>`;
-if(q.includes("growth")) reply+="Run weekend offers & increase marketing.";
-else if(q.includes("profit")) reply+="Increase price slightly or reduce cost.";
-else if(q.includes("upgrade")) reply+="Upgrade when 3 months profit stable.";
-else reply+="Focus on repeat customers.";
-document.getElementById('aiAnswer').innerHTML=reply;
-});
+let q=document.getElementById("aiQuestion").value.toLowerCase();
+let month=new Date().toISOString().slice(0,7);
+let revenue=0;
+let bookings=0;
+
+allBookings.forEach(b=>{
+if(b.startDate.startsWith(month)){
+bookings++;
+revenue+=Number(b.finalPrice);
 }
+});
+
+let avg=bookings? (revenue/bookings).toFixed(2):0;
+
+let reply=`This Month Revenue: ₹${revenue}<br>
+Total Bookings: ${bookings}<br>
+Average Booking Value: ₹${avg}<br><br>`;
+
+if(q.includes("growth")){
+reply+="To grow business increase weekend offers and push repeat customers.";
+}
+else if(q.includes("upgrade")){
+reply+="Upgrade when revenue grows consistently 3 months above current average.";
+}
+else if(q.includes("profit")){
+reply+="Reduce coupon usage slightly to increase net profit.";
+}
+else{
+reply+="Focus on marketing + loyalty rewards.";
+}
+
+document.getElementById("aiAnswer").innerHTML=reply;
+}
+
 </script>
-
 </body>
-</html>
+</html> 
 
 
 
-
-
-
-
-
-
-
- 
