@@ -298,8 +298,55 @@ Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
 });
 }
+// Review selectors
+for(let m=1;m<=12;m++){
+document.getElementById("reviewMonthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
+}
 
+let currentYear=new Date().getFullYear();
+for(let y=currentYear;y>=2023;y--){
+document.getElementById("reviewYearSelect").innerHTML+=
+`<option>${y}</option>`;
+  }
+  function deleteReviewsByMonth(){
+
+let m=document.getElementById("reviewMonthSelect").value;
+let y=document.getElementById("reviewYearSelect").value;
+
+if(!confirm("Are you sure you want to delete reviews of this month?")) return;
+
+let deletedCount=0;
+
+db.ref("reviews").once("value",snap=>{
+snap.forEach(c=>{
+let d=c.val();
+if(!d.date) return;
+
+let rd=new Date(d.date);
+
+if((rd.getMonth()+1)==m && rd.getFullYear()==y){
+db.ref("reviews/"+c.key).remove();
+deletedCount++;
+}
+});
+
+document.getElementById("deleteReviewResult").innerHTML=
+`Deleted Reviews: ${deletedCount}`;
+});
+  }
+  
 </script>
+  <div class="section card">
+<h2>Delete Reviews By Month</h2>
+
+<select id="reviewMonthSelect"></select>
+<select id="reviewYearSelect"></select>
+<button onclick="deleteReviewsByMonth()" class="danger">Delete Reviews</button>
+
+<div id="deleteReviewResult"></div>
+  </div>
+  
 </body>
 </html>
 
