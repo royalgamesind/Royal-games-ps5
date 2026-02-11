@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Royal Games Winner Reveal 💌</title>
 <style>
-/* ===== Body & Background ===== */
 body {
   margin: 0;
   height: 100vh;
@@ -19,7 +18,6 @@ body {
   overflow: hidden;
 }
 
-/* ===== Title ===== */
 h1 {
   text-align:center;
   text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
@@ -27,7 +25,6 @@ h1 {
   font-size: 2rem;
 }
 
-/* ===== Input & Button ===== */
 input, button {
   padding: 12px;
   margin: 5px;
@@ -51,7 +48,7 @@ button:hover {
   box-shadow: 0 0 20px #ff4500, 0 0 40px #ffcc00 inset;
 }
 
-/* ===== Winner Section ===== */
+/* Winner Section */
 #winner-section {
   display: none;
   position: relative;
@@ -59,21 +56,28 @@ button:hover {
   max-width: 500px;
   height: 60%;
   margin-top: 20px;
-  background: url('https://i.ibb.co/8b0F4sX/winner-background.png') center/cover no-repeat; /* Replace with your image */
+  background: url('ChatGPT Image Feb 11, 2026, 05_06_43 PM.png') center/cover no-repeat;
   border-radius: 20px;
   box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  overflow: hidden;
 }
 
-/* Prize Text */
+/* Prize Text Background Overlay */
+#text-overlay {
+  background: rgba(0,0,0,0.5); /* dark overlay for text readability */
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+}
+
 #prize-text {
   font-size: 24px;
   font-weight: bold;
   color: #0ff;
-  text-align: center;
   text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
   animation: glow 1.5s infinite alternate;
 }
@@ -86,7 +90,6 @@ button:hover {
   animation: glow 1.5s infinite alternate;
 }
 
-/* Glow Animation */
 @keyframes glow {
   0% { text-shadow: 0 0 5px #0ff, 0 0 15px #0ff; }
   100% { text-shadow: 0 0 15px #0ff, 0 0 30px #0ff; }
@@ -115,19 +118,20 @@ button:hover {
 <button onclick="showWinner()">Reveal Your Gift</button>
 
 <div id="winner-section">
-  <div id="prize-text"></div>
-  <div id="coupon-text"></div>
+  <div id="text-overlay">
+    <div id="prize-text"></div>
+    <div id="coupon-text"></div>
+  </div>
 </div>
 
 <script>
-// ===== Winner Data =====
+// Winner data
 const winners = {
   "WINNER10": { prize:"🥇 1 Day PS5 Rental FREE", code:"CONGRATS100" },
   "WINNER02": { prize:"🥈 50% OFF", code:"CONGRATS50" },
   "WINNER45": { prize:"🥉 40% OFF", code:"CONGRATS40" }
 };
 
-// ===== Show Winner Function =====
 const winnerSection = document.getElementById('winner-section');
 const prizeText = document.getElementById('prize-text');
 const couponText = document.getElementById('coupon-text');
@@ -145,7 +149,7 @@ function showWinner() {
   }
 }
 
-// ===== Confetti Generator =====
+// Confetti
 function createConfetti(){
   for(let i=0;i<50;i++){
     const conf = document.createElement('div');
@@ -170,7 +174,4 @@ function randomColor(){
 
 
 
-
-
-
-      
+    
