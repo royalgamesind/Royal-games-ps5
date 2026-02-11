@@ -51,69 +51,48 @@ button:hover {
   box-shadow: 0 0 20px #ff4500, 0 0 40px #ffcc00 inset;
 }
 
-/* ===== Card Container ===== */
-#card-container {
-  width: 300px;
-  height: 180px;
-  perspective: 1500px;
-  margin-top: 20px;
+/* ===== Winner Section ===== */
+#winner-section {
   display: none;
-}
-
-/* ===== Card Styling ===== */
-#card {
-  width: 100%;
-  height: 100%;
   position: relative;
-  transform-style: preserve-3d;
-  transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  cursor: pointer;
-}
-
-/* ===== Front/Back Card Styles ===== */
-.front, .back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 15px;
-  backface-visibility: hidden;
+  width: 90%;
+  max-width: 500px;
+  height: 60%;
+  margin-top: 20px;
+  background: url('https://i.ibb.co/8b0F4sX/winner-background.png') center/cover no-repeat; /* Replace with your image */
+  border-radius: 20px;
+  box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
-  box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
+  flex-direction: column;
 }
 
-/* Front */
-.front {
-  background: linear-gradient(135deg,#111,#222);
+/* Prize Text */
+#prize-text {
+  font-size: 24px;
+  font-weight: bold;
   color: #0ff;
+  text-align: center;
+  text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+  animation: glow 1.5s infinite alternate;
+}
+
+#coupon-text {
   font-size: 20px;
-  font-weight: bold;
-  padding: 15px;
-  transform: rotateY(0deg);
-  text-shadow: 0 0 5px #0ff,0 0 10px #0ff;
-  border: 2px solid #0ff;
+  margin-top: 10px;
+  color: #ff0;
+  text-shadow: 0 0 5px #ff0, 0 0 10px #ff0;
+  animation: glow 1.5s infinite alternate;
 }
 
-/* Back */
-.back {
-  background: #fff;
-  color: #0b0b0f;
-  font-size: 18px;
-  font-weight: bold;
-  transform: rotateY(180deg);
-  padding: 10px;
-  border: 2px solid #0ff;
-  text-shadow: 0 0 5px #0ff,0 0 10px #0ff;
+/* Glow Animation */
+@keyframes glow {
+  0% { text-shadow: 0 0 5px #0ff, 0 0 15px #0ff; }
+  100% { text-shadow: 0 0 15px #0ff, 0 0 30px #0ff; }
 }
 
-/* Flip */
-.flipped {
-  transform: rotateY(180deg);
-}
-
-/* ===== Confetti ===== */
+/* Confetti */
 .confetti {
   position: absolute;
   width: 10px;
@@ -130,16 +109,14 @@ button:hover {
 </head>
 <body>
 
-<h1>🎮 Royal Games Winner Reveal 💌</h1>
+<h1>🎮 Royal Games Winner 💌</h1>
 <p>Enter your winner password:</p>
 <input type="text" id="winnerCode" placeholder="Enter password">
-<button onclick="showCard()">Reveal Your Card</button>
+<button onclick="showWinner()">Reveal Your Gift</button>
 
-<div id="card-container">
-  <div id="card">
-    <div class="front">🎉 Tap to Reveal Your Prize 🎉</div>
-    <div class="back" id="card-back"></div>
-  </div>
+<div id="winner-section">
+  <div id="prize-text"></div>
+  <div id="coupon-text"></div>
 </div>
 
 <script>
@@ -150,24 +127,21 @@ const winners = {
   "WINNER45": { prize:"🥉 40% OFF", code:"CONGRATS40" }
 };
 
-// ===== Show Card Function =====
-const card = document.getElementById('card');
-const cardBack = document.getElementById('card-back');
-const cardContainer = document.getElementById('card-container');
+// ===== Show Winner Function =====
+const winnerSection = document.getElementById('winner-section');
+const prizeText = document.getElementById('prize-text');
+const couponText = document.getElementById('coupon-text');
 
-function showCard() {
+function showWinner() {
   const code = document.getElementById('winnerCode').value.trim().toUpperCase();
   if(winners[code]){
     const winner = winners[code];
-    cardBack.innerHTML = `${winner.prize}<br>Coupon: ${winner.code}<br>Valid for 1-day rental only`;
-    cardContainer.style.display = "block";
-    card.classList.remove("flipped");
-    setTimeout(()=>{
-      card.classList.add("flipped");
-      createConfetti();
-    }, 300);
+    prizeText.innerHTML = winner.prize;
+    couponText.innerHTML = `Coupon: ${winner.code}<br>Valid for 1-day rental only`;
+    winnerSection.style.display = "flex";
+    createConfetti();
   } else {
-    alert("❌ Invalid password! Only winners can reveal the card.");
+    alert("❌ Invalid password! Only winners can see their gift.");
   }
 }
 
@@ -188,12 +162,6 @@ function randomColor(){
   const colors = ['#ff0','#ff4500','#0ff','#f0f','#0f0','#fff'];
   return colors[Math.floor(Math.random()*colors.length)];
 }
-
-// ===== Optional: Click card manually =====
-card.addEventListener("click", ()=>{
-  card.classList.toggle("flipped");
-  createConfetti();
-});
 </script>
 
 </body>
@@ -203,3 +171,6 @@ card.addEventListener("click", ()=>{
 
 
 
+
+
+      
