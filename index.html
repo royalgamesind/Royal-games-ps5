@@ -17,6 +17,7 @@ input,select,button{padding:10px;border-radius:8px;border:none;margin:5px 0}
 input,select{background:#1f2937;color:#fff}
 button{background:gold;color:#000;font-weight:bold;cursor:pointer}
 button.danger{background:#e53935;color:#fff}
+button.delete{background:#6b7280;color:#fff}
 .table-box{max-height:260px;overflow-y:auto;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
@@ -79,7 +80,7 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 <script>
 
 /******** FIREBASE ********/
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
   authDomain: "royalgamesproject.firebaseapp.com",
   databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -88,8 +89,6 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
   messagingSenderId: "1008609758558",
   appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
 };
-  
-
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -122,7 +121,7 @@ let start=new Date(d.startDate);
 let end=new Date(start);
 end.setDate(start.getDate()+Number(d.days));
 
-if(today>end && d.status!=="Completed"){
+if(today>end){
 db.ref("bookings/"+id).update({status:"Completed"});
 }
 });
@@ -136,12 +135,7 @@ let status=d.status||"Active";
 let actionButton = status==="Cancelled"
 ? `<button onclick="restoreBooking('${id}')">Restore</button>`
 : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
-function deleteBooking(id){
-if(confirm("Are you sure you want to permanently delete this booking?")){
-db.ref("bookings/"+id).remove();
-}
-  }
-  
+
 return `<tr>
 <td>${id}</td>
 <td>${d.name||''}</td>
@@ -152,6 +146,7 @@ return `<tr>
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
 <td>${actionButton}</td>
+<td><button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
 </tr>`;
 }
 
@@ -161,7 +156,7 @@ db.ref("bookings").limitToLast(5).on("value",snap=>{
 let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Status</th><th>Action</th></tr>`;
+<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
 snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
 document.getElementById("recentTable").innerHTML=html;
 });
@@ -170,12 +165,11 @@ document.getElementById("recentTable").innerHTML=html;
 /******** SEARCH ********/
 function searchBooking(){
 let val=document.getElementById("searchBox").value.toLowerCase();
-
 db.ref("bookings").once("value",snap=>{
 let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Status</th><th>Action</th></tr>`;
+<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
 snap.forEach(c=>{
 let d=c.val();
 if(c.key.toLowerCase().includes(val)||
@@ -199,7 +193,14 @@ function restoreBooking(id){
 db.ref("bookings/"+id).update({status:"Active"});
 }
 
-/******** 10 DAYS FIXED ********/
+/******** DELETE ********/
+function deleteBooking(id){
+if(confirm("Permanently delete booking?")){
+db.ref("bookings/"+id).remove();
+}
+}
+
+/******** 10 DAYS ********/
 function tenDays(){
 let total=0,count=0;
 let today=new Date();
@@ -208,45 +209,35 @@ db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
 if(d.status!=="Completed") return;
-if(!d.startDate||!d.days) return;
-
-let start=new Date(d.startDate);
-let end=new Date(start);
-end.setDate(start.getDate()+Number(d.days));
-
+let end=new Date(d.startDate);
+end.setDate(end.getDate()+Number(d.days||0));
 let diff=(today-end)/(1000*60*60*24);
-
 if(diff<=10 && diff>=0){
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
-
 document.getElementById("tenDaysData").innerHTML=
 `Total Completed: ${count}<br>Total Earnings: ₹${total}`;
 });
 }
 
-/******** SELECTORS (SAFE FIX) ********/
+/******** SELECTORS ********/
 function populateSelectors(){
 for(let m=1;m<=12;m++){
-document.getElementById("monthSelect").innerHTML+=
-`<option value="${m}">${m}</option>`;
+monthSelect.innerHTML+=`<option value="${m}">${m}</option>`;
 }
-
 let currentYear=new Date().getFullYear();
 for(let y=currentYear;y>=2023;y--){
-document.getElementById("yearSelect").innerHTML+=
-`<option>${y}</option>`;
-document.getElementById("yearOnlySelect").innerHTML+=
-`<option>${y}</option>`;
+yearSelect.innerHTML+=`<option>${y}</option>`;
+yearOnlySelect.innerHTML+=`<option>${y}</option>`;
 }
 }
 
 /******** MONTHLY ********/
 function calculateMonthly(){
-let m=document.getElementById("monthSelect").value;
-let y=document.getElementById("yearSelect").value;
+let m=monthSelect.value;
+let y=yearSelect.value;
 let total=0,completed=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
@@ -254,7 +245,6 @@ snap.forEach(c=>{
 let d=c.val();
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
-
 if((bd.getMonth()+1)==m && bd.getFullYear()==y){
 if(d.status==="Completed"){
 total+=Number(d.finalPrice||0);
@@ -263,8 +253,7 @@ completed++;
 if(d.status==="Cancelled") cancelled++;
 }
 });
-
-document.getElementById("monthlyResult").innerHTML=
+monthlyResult.innerHTML=
 `Completed: ${completed}<br>
 Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
@@ -273,7 +262,7 @@ Revenue: ₹${total}`;
 
 /******** YEARLY ********/
 function calculateYearly(){
-let y=document.getElementById("yearOnlySelect").value;
+let y=yearOnlySelect.value;
 let total=0,completed=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
@@ -281,7 +270,6 @@ snap.forEach(c=>{
 let d=c.val();
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
-
 if(bd.getFullYear()==y){
 if(d.status==="Completed"){
 total+=Number(d.finalPrice||0);
@@ -289,70 +277,17 @@ completed++;
 }
 if(d.status==="Cancelled") cancelled++;
 }
-}
-);
-
-document.getElementById("yearlyResult").innerHTML=
+});
+yearlyResult.innerHTML=
 `Completed: ${completed}<br>
 Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
 });
 }
-// Review selectors
-for(let m=1;m<=12;m++){
-document.getElementById("reviewMonthSelect").innerHTML+=
-`<option value="${m}">${m}</option>`;
-}
 
-let currentYear=new Date().getFullYear();
-for(let y=currentYear;y>=2023;y--){
-document.getElementById("reviewYearSelect").innerHTML+=
-`<option>${y}</option>`;
-  }
-  function deleteReviewsByMonth(){
-
-let m=document.getElementById("reviewMonthSelect").value;
-let y=document.getElementById("reviewYearSelect").value;
-
-if(!confirm("Are you sure you want to delete reviews of this month?")) return;
-
-let deletedCount=0;
-
-db.ref("reviews").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.date) return;
-
-let rd=new Date(d.date);
-
-if((rd.getMonth()+1)==m && rd.getFullYear()==y){
-db.ref("reviews/"+c.key).remove();
-deletedCount++;
-}
-});
-
-document.getElementById("deleteReviewResult").innerHTML=
-`Deleted Reviews: ${deletedCount}`;
-});
-  }
-  
 </script>
-  <div class="section card">
-<h2>Delete Reviews By Month</h2>
-
-<select id="reviewMonthSelect"></select>
-<select id="reviewYearSelect"></select>
-<button onclick="deleteReviewsByMonth()" class="danger">Delete Reviews</button>
-
-<div id="deleteReviewResult"></div>
-  </div>
-  
 </body>
 </html>
-
-
-
-
 
 
 
