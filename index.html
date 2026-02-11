@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard - Income Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f6fc;
+    margin: 0;
+    padding: 0 20px;
+  }
+  h1, h2, h3 { color: #333; }
+  .center { text-align: center; }
+  input, button { padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+  button { cursor: pointer; background-color: #4a6cf7; color: white; border: none; transition: 0.3s; }
+  button:hover { background-color: #3752d0; }
+  #tracker { display: none; margin-top: 20px; }
+  .card {
+    background-color: white;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+  th { background-color: #f0f0f0; }
+  .result-box { background-color: #e0f7e9; padding: 10px; border-radius: 5px; margin-top: 10px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="center">
+<h1>Private Admin Dashboard</h1>
+<label>Password: </label>
+<input type="password" id="adminPassword" placeholder="Enter password">
+<button onclick="checkPassword()">Login</button>
+</div>
+
+<div id="tracker">
+
+  <div class="card">
+    <h2>Calculate Income</h2>
+    <div>
+      <label>Daily:</label>
+      <input type="date" id="dailyDate">
+      <button onclick="calculateDaily()">Daily</button>
+    </div>
+    <div>
+      <label>Monthly:</label>
+      <input type="month" id="monthlyDate">
+      <button onclick="calculateMonthly()">Monthly</button>
+    </div>
+    <div>
+      <label>Yearly:</label>
+      <input type="number" id="yearlyDate" placeholder="YYYY">
+      <button onclick="calculateYearly()">Yearly</button>
+    </div>
+    <div id="result" class="result-box"></div>
+  </div>
+
+  <div class="card">
+    <h2>All Bookings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody id="bookingTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // 🔒 Password
+  const PASSWORD = "YUVRAJ0011"; // Change this
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let bookings = [];
+
+  function checkPassword() {
+    const input = document.getElementById('adminPassword').value;
+    if(input === PASSWORD){
+      document.getElementById('tracker').style.display = 'block';
+      loadBookings();
+    } else {
+      alert("Wrong password!");
+    }
+  }
+
+  async function loadBookings() {
+    try {
+      const response = await fetch(firebaseConfig.databaseURL + '/bookings.json');
+      const data = await response.json();
+      if(data){
+        bookings = Object.values(data);
+        displayBookings();
+      } else {
+        bookings = [];
+      }
+    } catch(err){
+      console.error("Error loading bookings:", err);
+    }
+  }
+
+  function displayBookings(){
+    const tbody = document.getElementById('bookingTable');
+    tbody.innerHTML = "";
+    bookings.forEach(b => {
+      const tr = document.createElement('tr');
+      const tdDate = document.createElement('td');
+      tdDate.innerText = b.date;
+      const tdAmount = document.createElement('td');
+      tdAmount.innerText = b.amount;
+      tr.appendChild(tdDate);
+      tr.appendChild(tdAmount);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function calculateDaily(){
+    const date = document.getElementById('dailyDate').value;
+    const total = bookings.filter(b => b.date === date)
+                          .reduce((sum,b)=>sum+Number(b.amount),0);
+    document.getElementById('result').innerText = `Daily Income (${date}): ₹${total}`;
+  }
+
+  function calculateMonthly(){
+    const month = document.getElementById('monthlyDate').value;
+    const total = bookings.filter(b => b.date && b.date.startsWith(month))
+                          .reduce((sum,b)=>sum+Number(b.amount),0);
+    document.getElementById('result').innerText = `Monthly Income (${month}): ₹${total}`;
+  }
+
+  function calculateYearly(){
+    const year = document.getElementById('yearlyDate').value;
+    const total = bookings.filter(b => b.date && b.date.startsWith(year))
+                          .reduce((sum,b)=>sum+Number(b.amount),0);
+    document.getElementById('result').innerText = `Yearly Income (${year}): ₹${total}`;
+  }
+</script>
+
+</body>
+</html>
+
+
+
+
