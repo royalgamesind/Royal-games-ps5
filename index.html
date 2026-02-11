@@ -3,31 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Games Winner Card 💌</title>
+<title>Royal Games Winner Reveal 💌</title>
 <style>
+/* ===== Body & Background ===== */
 body {
   margin: 0;
   height: 100vh;
-  background: radial-gradient(circle at top, #0b0b0f, #1a1a24);
-  font-family: 'Arial', sans-serif;
-  color: #fff;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #0a0a0f, #11111a);
+  font-family: 'Arial', sans-serif;
+  color: #fff;
   overflow: hidden;
 }
 
+/* ===== Title ===== */
 h1 {
   text-align:center;
   text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
   margin-bottom: 10px;
+  font-size: 2rem;
 }
 
+/* ===== Input & Button ===== */
 input, button {
   padding: 12px;
   margin: 5px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   font-weight: bold;
   font-size: 16px;
@@ -35,100 +39,118 @@ input, button {
 
 button {
   cursor: pointer;
-  background: #ff4500;
-  color: #fff;
-  text-shadow: 0 0 5px #000;
+  background: linear-gradient(45deg,#ff4500,#ffcc00);
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 0 10px #ffcc00;
+  transition: 0.3s;
 }
 
-/* Card container */
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #ff4500, 0 0 40px #ffcc00 inset;
+}
+
+/* ===== Card Container ===== */
 #card-container {
-  width: 280px;
-  height: 160px;
-  perspective: 1000px;
+  width: 300px;
+  height: 180px;
+  perspective: 1500px;
   margin-top: 20px;
   display: none;
 }
 
-/* Card */
+/* ===== Card Styling ===== */
 #card {
   width: 100%;
   height: 100%;
-  background: #111;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #0ff;
-  font-weight: bold;
-  font-size: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 1s;
+  position: relative;
   transform-style: preserve-3d;
-  box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset;
+  transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  cursor: pointer;
 }
 
-/* Card back */
-#card .back {
+/* ===== Front/Back Card Styles ===== */
+.front, .back {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: #fff;
-  color: #0b0b0f;
-  transform: rotateY(180deg);
+  border-radius: 15px;
+  backface-visibility: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
-  font-size: 18px;
   text-align: center;
-  border-radius: 12px;
-  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+  box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
 }
 
-/* Flip card */
+/* Front */
+.front {
+  background: linear-gradient(135deg,#111,#222);
+  color: #0ff;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 15px;
+  transform: rotateY(0deg);
+  text-shadow: 0 0 5px #0ff,0 0 10px #0ff;
+  border: 2px solid #0ff;
+}
+
+/* Back */
+.back {
+  background: #fff;
+  color: #0b0b0f;
+  font-size: 18px;
+  font-weight: bold;
+  transform: rotateY(180deg);
+  padding: 10px;
+  border: 2px solid #0ff;
+  text-shadow: 0 0 5px #0ff,0 0 10px #0ff;
+}
+
+/* Flip */
 .flipped {
   transform: rotateY(180deg);
 }
 
-/* Confetti */
+/* ===== Confetti ===== */
 .confetti {
   position: absolute;
   width: 10px;
   height: 10px;
-  background: #ff0;
   border-radius: 50%;
   animation: fall 1.5s linear forwards;
   opacity: 0.9;
 }
 @keyframes fall {
   0% {transform: translateY(0) rotate(0deg);}
-  100% {transform: translateY(350px) rotate(720deg); opacity: 0;}
+  100% {transform: translateY(400px) rotate(720deg); opacity: 0;}
 }
 </style>
 </head>
 <body>
 
-<h1>🎮 Royal Games Winner Card 💌</h1>
+<h1>🎮 Royal Games Winner Reveal 💌</h1>
 <p>Enter your winner password:</p>
 <input type="text" id="winnerCode" placeholder="Enter password">
-<button onclick="showCard()">Reveal Card</button>
+<button onclick="showCard()">Reveal Your Card</button>
 
 <div id="card-container">
   <div id="card">
-    <div class="front">Tap to Reveal Your Prize 🎉</div>
+    <div class="front">🎉 Tap to Reveal Your Prize 🎉</div>
     <div class="back" id="card-back"></div>
   </div>
 </div>
 
 <script>
-// Winner data
+// ===== Winner Data =====
 const winners = {
   "WINNER10": { prize:"🥇 1 Day PS5 Rental FREE", code:"CONGRATS100" },
   "WINNER02": { prize:"🥈 50% OFF", code:"CONGRATS50" },
   "WINNER45": { prize:"🥉 40% OFF", code:"CONGRATS40" }
 };
 
+// ===== Show Card Function =====
 const card = document.getElementById('card');
 const cardBack = document.getElementById('card-back');
 const cardContainer = document.getElementById('card-container');
@@ -140,35 +162,34 @@ function showCard() {
     cardBack.innerHTML = `${winner.prize}<br>Coupon: ${winner.code}<br>Valid for 1-day rental only`;
     cardContainer.style.display = "block";
     card.classList.remove("flipped");
-    setTimeout(()=> {
+    setTimeout(()=>{
       card.classList.add("flipped");
       createConfetti();
-    }, 200); // small delay before flip
+    }, 300);
   } else {
     alert("❌ Invalid password! Only winners can reveal the card.");
   }
 }
 
-// Confetti generator
+// ===== Confetti Generator =====
 function createConfetti(){
-  for(let i=0;i<40;i++){
+  for(let i=0;i<50;i++){
     const conf = document.createElement('div');
     conf.classList.add('confetti');
     conf.style.background = randomColor();
     conf.style.left = Math.random()*window.innerWidth + "px";
     conf.style.top = "0px";
-    conf.style.width = conf.style.height = Math.random()*8 + 6 + "px";
+    conf.style.width = conf.style.height = Math.random()*10 + 5 + "px";
     document.body.appendChild(conf);
     setTimeout(()=> conf.remove(),1600);
   }
 }
-
 function randomColor(){
   const colors = ['#ff0','#ff4500','#0ff','#f0f','#0f0','#fff'];
   return colors[Math.floor(Math.random()*colors.length)];
 }
 
-// Make card clickable to flip manually (optional)
+// ===== Optional: Click card manually =====
 card.addEventListener("click", ()=>{
   card.classList.toggle("flipped");
   createConfetti();
@@ -177,9 +198,6 @@ card.addEventListener("click", ()=>{
 
 </body>
 </html>
-
-
-
 
 
 
