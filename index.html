@@ -233,16 +233,31 @@ document.getElementById("tenDaysData").innerHTML=
 }
 
 /******** SELECTORS ********/
-function populateSelectors(){
+  function populateSelectors(){
+
+// Booking selectors
 for(let m=1;m<=12;m++){
-monthSelect.innerHTML+=`<option value="${m}">${m}</option>`;
+document.getElementById("monthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
+
+document.getElementById("reviewMonthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
 }
+
 let currentYear=new Date().getFullYear();
 for(let y=currentYear;y>=2023;y--){
-yearSelect.innerHTML+=`<option>${y}</option>`;
-yearOnlySelect.innerHTML+=`<option>${y}</option>`;
+document.getElementById("yearSelect").innerHTML+=
+`<option>${y}</option>`;
+
+document.getElementById("yearOnlySelect").innerHTML+=
+`<option>${y}</option>`;
+
+document.getElementById("reviewYearSelect").innerHTML+=
+`<option>${y}</option>`;
 }
-}
+  }
+  
+
 
 /******** MONTHLY ********/
 function calculateMonthly(){
