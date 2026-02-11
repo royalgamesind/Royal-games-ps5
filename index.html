@@ -56,12 +56,47 @@ button.danger{background:#e53935}
 <div class="card">Estimated Cost<br><h2>₹<span id="monthlyCost">0</span></h2></div>
 <div class="card">Net Profit<br><h2 style="color:#22c55e">₹<span id="monthlyProfit">0</span></h2></div>
 </div>
+function searchBooking(){
+let val=document.getElementById('searchBox').value.toLowerCase();
 
-<!-- SEARCH -->
-<h2 class="gold">Search Booking</h2>
-<input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
-<button onclick="searchBooking()">Search</button>
-<div id="searchResult"></div>
+db.ref('bookings').once('value',snap=>{
+let found=false;
+let html='';
+
+snap.forEach(child=>{
+let d=child.val();
+let id=child.key;
+
+if(id.toLowerCase().includes(val) || (d.name && d.name.toLowerCase().includes(val))){
+
+found=true;
+
+html+=`
+<div class="card">
+<b>ID:</b> ${id}<br>
+<b>Name:</b> ${d.name}<br>
+<b>Phone:</b> ${d.phone}<br>
+<b>Console:</b> ${d.console || "N/A"}<br>
+<b>Date:</b> ${d.startDate || d.date || "N/A"}<br>
+<b>Days:</b> ${d.days || 1}<br>
+<b>Total Price:</b> ₹${d.finalPrice || d.price || 0}<br><br>
+
+<button class="danger" onclick="cancelBooking('${id}')">Cancel Booking</button>
+</div>
+`;
+}
+});
+
+if(!found){
+html="<div class='card' style='color:red'>No booking found</div>";
+}
+
+document.getElementById('searchResult').innerHTML=html;
+
+});
+}
+  
+
 
 <!-- BOOKINGS -->
 <h2 class="gold">All Bookings</h2>
