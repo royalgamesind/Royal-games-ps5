@@ -9,174 +9,205 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b0f1a;color:#fff;padding:20px}
-h1{color:gold}
-.card{background:#111827;padding:15px;border-radius:15px;margin-bottom:20px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #333;text-align:left;font-size:14px}
-th{color:#38bdf8}
-button{padding:6px 10px;border:none;border-radius:8px;cursor:pointer}
-.danger{background:#e53935;color:#fff}
-.scroll{max-height:300px;overflow-y:auto}
-select,input{padding:6px;border-radius:8px;border:none;margin:5px 0}
-#loginBox{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
-#loginBox div{background:#111827;padding:25px;border-radius:15px;text-align:center}
+body{margin:0;font-family:Segoe UI;background:#0b0f1a;color:#fff;padding:20px}
+h1{text-align:center;color:gold}
+.section{margin-top:30px}
+.card{background:#111827;padding:20px;border-radius:18px;margin-top:15px;box-shadow:0 0 15px rgba(255,215,0,.08)}
+input,select,button{padding:10px;border-radius:8px;border:none;margin:5px 0}
+input,select{background:#1f2937;color:#fff}
+button{background:gold;color:#000;font-weight:bold;cursor:pointer}
+button.danger{background:#e53935;color:#fff}
+.table-box{max-height:260px;overflow-y:auto;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
+th{color:#facc15}
+#loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
+display:flex;align-items:center;justify-content:center;z-index:9999}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginBox">
-<div>
-<h2>Admin Login</h2>
-<input type="password" id="pass" placeholder="Enter Password"><br><br>
-<button onclick="login()">Enter</button>
-<p id="err" style="color:red"></p>
+<div style="background:#111827;padding:40px;border-radius:20px;
+width:320px;text-align:center;border:2px solid gold;
+box-shadow:0 0 25px rgba(255,215,0,.3)">
+<h2 style="color:gold">👑 Royal Admin</h2>
+<input type="password" id="adminPass" placeholder="Enter Password" style="width:100%">
+<button onclick="checkPassword()" style="width:100%">Login</button>
+<p id="loginError" style="color:#f87171"></p>
 </div>
 </div>
 
-<h1>👑 Royal Games Admin</h1>
+<h1>Royal Games Dashboard</h1>
 
 <!-- SEARCH -->
-<div class="card">
+<div class="section card">
 <h2>Search Booking</h2>
-<input type="text" id="searchInput" placeholder="Name or ID">
+<input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
 <button onclick="searchBooking()">Search</button>
-<div class="scroll">
-<table>
-<thead>
-<tr>
-<th>ID</th><th>Name</th><th>Phone</th><th>Console</th>
-<th>Date</th><th>Days</th><th>Final ₹</th><th>Action</th>
-</tr>
-</thead>
-<tbody id="searchResult"></tbody>
-</table>
+<div class="table-box">
+<table id="searchTable"></table>
 </div>
 </div>
 
-<!-- RECENT 5 -->
-<div class="card">
+<!-- RECENT -->
+<div class="section card">
 <h2>Recent 5 Bookings</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr>
-<th>ID</th><th>Name</th><th>Phone</th><th>Console</th>
-<th>Date</th><th>Days</th><th>Final ₹</th><th>Action</th>
-</tr>
-</thead>
-<tbody id="recentTable"></tbody>
-</table>
+<div class="table-box">
+<table id="recentTable"></table>
 </div>
 </div>
 
-<!-- 10 DAY PERFORMANCE -->
-<div class="card">
+<!-- 10 DAYS -->
+<div class="section card">
 <h2>Last 10 Days Performance</h2>
 <div id="tenDaysData"></div>
 </div>
 
 <!-- MONTHLY -->
-<div class="card">
+<div class="section card">
 <h2>Monthly Performance</h2>
-<input type="month" id="monthSelect" onchange="monthlyCalc()">
+<select id="monthSelect"></select>
+<select id="yearSelect"></select>
+<button onclick="calculateMonthly()">Check</button>
 <div id="monthlyResult"></div>
 </div>
 
 <!-- YEARLY -->
-<div class="card">
+<div class="section card">
 <h2>Yearly Performance</h2>
-<select id="yearSelect" onchange="yearlyCalc()"></select>
+<select id="yearOnlySelect"></select>
+<button onclick="calculateYearly()">Check</button>
 <div id="yearlyResult"></div>
 </div>
 
 <script>
-const firebaseConfig={
-databaseURL:"https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app"
-};
-firebase.initializeApp(firebaseConfig);
-var db=firebase.database();
 
-function login(){
-if(document.getElementById("pass").value==="YUVRAJ01"){
+/******** FIREBASE ********/
+const firebaseConfig = {
+  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
+  authDomain: "royalgamesproject.firebaseapp.com",
+  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "royalgamesproject",
+  storageBucket: "royalgamesproject.firebasestorage.app",
+  messagingSenderId: "1008609758558",
+  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/******** LOGIN ********/
+function checkPassword(){
+if(document.getElementById("adminPass").value==="Royal@2026"){
 document.getElementById("loginBox").style.display="none";
 loadRecent();
-loadYears();
 tenDays();
+populateSelectors();
 }else{
-document.getElementById("err").innerText="Wrong Password";
+document.getElementById("loginError").innerText="Wrong Password";
 }
 }
 
+/******** TABLE ROW ********/
+function rowHTML(id,d){
+return `<tr>
+<td>${id}</td>
+<td>${d.name||''}</td>
+<td>${d.phone||''}</td>
+<td>${d.console||''}</td>
+<td>${d.startDate||''}</td>
+<td>${d.days||''}</td>
+<td>₹${d.finalPrice||0}</td>
+<td><button class="danger" onclick="cancelBooking('${id}')">Cancel</button></td>
+</tr>`;
+}
+
+/******** RECENT ********/
+function loadRecent(){
+db.ref("bookings").limitToLast(5).on("value",snap=>{
+let html=`<tr>
+<th>ID</th><th>Name</th><th>Phone</th>
+<th>Console</th><th>Date</th><th>Days</th>
+<th>Final</th><th>Action</th></tr>`;
+snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
+document.getElementById("recentTable").innerHTML=html;
+});
+}
+
+/******** SEARCH ********/
+function searchBooking(){
+let val=document.getElementById("searchBox").value.toLowerCase();
+db.ref("bookings").once("value",snap=>{
+let html=`<tr>
+<th>ID</th><th>Name</th><th>Phone</th>
+<th>Console</th><th>Date</th><th>Days</th>
+<th>Final</th><th>Action</th></tr>`;
+snap.forEach(c=>{
+let d=c.val();
+if(c.key.toLowerCase().includes(val)||
+(d.name||"").toLowerCase().includes(val)){
+html+=rowHTML(c.key,d);
+}
+});
+document.getElementById("searchTable").innerHTML=html;
+});
+}
+
+/******** CANCEL ********/
 function cancelBooking(id){
 if(confirm("Cancel booking?")){
 db.ref("bookings/"+id).remove();
 }
 }
 
-function searchBooking(){
-let val=document.getElementById("searchInput").value.toLowerCase();
-db.ref("bookings").once("value",snap=>{
-let html="";
-snap.forEach(c=>{
-let d=c.val();
-if(c.key.toLowerCase().includes(val) || d.name.toLowerCase().includes(val)){
-html+=row(c.key,d);
-}
-});
-document.getElementById("searchResult").innerHTML=html||"<tr><td colspan='8'>No Result</td></tr>";
-});
-}
-
-function loadRecent(){
-db.ref("bookings").limitToLast(5).on("value",snap=>{
-let html="";
-snap.forEach(c=>{
-html=row(c.key,c.val())+html;
-});
-document.getElementById("recentTable").innerHTML=html;
-});
-}
-
-function row(id,d){
-return `<tr>
-<td>${id}</td>
-<td>${d.name}</td>
-<td>${d.phone}</td>
-<td>${d.console}</td>
-<td>${d.startDate}</td>
-<td>${d.days}</td>
-<td>${d.finalPrice}</td>
-<td><button class='danger' onclick="cancelBooking('${id}')">Cancel</button></td>
-</tr>`;
-}
-
+/******** 10 DAYS ********/
 function tenDays(){
-db.ref("bookings").once("value",snap=>{
-let today=new Date();
 let total=0,count=0;
+let today=new Date();
+db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
-let date=new Date(d.startDate);
-let diff=(today-date)/(1000*60*60*24);
+if(!d.startDate) return;
+let bd=new Date(d.startDate);
+let diff=(today-bd)/(1000*60*60*24);
 if(diff<=10){
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
 document.getElementById("tenDaysData").innerHTML=
-`Bookings: ${count}<br>Total Earned: ₹${total}`;
+`Total Bookings: ${count}<br>Total Earnings: ₹${total}`;
 });
 }
 
-function monthlyCalc(){
-let month=document.getElementById("monthSelect").value;
-if(!month) return;
-db.ref("bookings").once("value",snap=>{
+/******** SELECTORS ********/
+function populateSelectors(){
+for(let m=1;m<=12;m++){
+document.getElementById("monthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
+}
+let currentYear=new Date().getFullYear();
+for(let y=currentYear;y>=2023;y--){
+document.getElementById("yearSelect").innerHTML+=
+`<option>${y}</option>`;
+document.getElementById("yearOnlySelect").innerHTML+=
+`<option>${y}</option>`;
+}
+}
+
+/******** MONTHLY ********/
+function calculateMonthly(){
+let m=document.getElementById("monthSelect").value;
+let y=document.getElementById("yearSelect").value;
 let total=0,count=0;
+db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
-if(d.startDate && d.startDate.startsWith(month)){
+if(!d.startDate) return;
+let bd=new Date(d.startDate);
+if((bd.getMonth()+1)==m && bd.getFullYear()==y){
 total+=Number(d.finalPrice||0);
 count++;
 }
@@ -186,24 +217,16 @@ document.getElementById("monthlyResult").innerHTML=
 });
 }
 
-function loadYears(){
-let currentYear=new Date().getFullYear();
-let select=document.getElementById("yearSelect");
-for(let y=currentYear;y>=2023;y--){
-let opt=document.createElement("option");
-opt.value=y;
-opt.innerText=y;
-select.appendChild(opt);
-}
-}
-
-function yearlyCalc(){
-let year=document.getElementById("yearSelect").value;
-db.ref("bookings").once("value",snap=>{
+/******** YEARLY ********/
+function calculateYearly(){
+let y=document.getElementById("yearOnlySelect").value;
 let total=0,count=0;
+db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
-if(d.startDate && d.startDate.startsWith(year)){
+if(!d.startDate) return;
+let bd=new Date(d.startDate);
+if(bd.getFullYear()==y){
 total+=Number(d.finalPrice||0);
 count++;
 }
@@ -212,9 +235,14 @@ document.getElementById("yearlyResult").innerHTML=
 `Total Bookings: ${count}<br>Total Revenue: ₹${total}`;
 });
 }
+
 </script>
 </body>
 </html>
+
+
+
+
 
 
 
