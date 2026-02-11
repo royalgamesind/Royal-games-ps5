@@ -13,14 +13,17 @@ body{margin:0;font-family:'Roboto',sans-serif;background:#0b0f1a;color:#fff}
 .card{background:#111827;border-radius:20px;padding:20px;margin:20px auto;max-width:800px;box-shadow:0 0 20px rgba(0,255,255,.1);transition:.3s}
 .card:hover{transform:translateY(-5px);box-shadow:0 0 25px rgba(0,255,255,.3)}
 .card h2{font-family:'Orbitron',sans-serif;color:#0ea5e9;margin-bottom:15px}
-input, select, button{padding:12px;margin:6px 0;border-radius:12px;border:none;font-size:16px}
-input, select{width:95%;background:#1f2937;color:#fff}
+input, select, button, textarea{padding:12px;margin:6px 0;border-radius:12px;border:none;font-size:16px}
+input, select, textarea{width:95%;background:#1f2937;color:#fff}
+textarea{resize:none}
 button{background:#25D366;color:#fff;font-weight:bold;cursor:pointer;transition:.3s}
 button:hover{background:#1ebe57}
-table{width:100%;border-collapse:collapse;margin-top:12px}
-th,td{padding:10px;text-align:left;border-bottom:1px solid #333}
-th{background:#1f2937}
-.result-box{background:#22c55e;color:#0b0f1a;font-weight:bold;padding:12px;border-radius:12px;margin-top:10px}
+.result-box{background:#22c55e;color:#0b0f1a;font-weight:bold;padding:12px;border-radius:12px;margin-top:10px;white-space:pre-line}
+.scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px}
+.scroll-table table{width:100%;min-width:700px;border-collapse:collapse}
+.scroll-table th, .scroll-table td{padding:10px;border-bottom:1px solid #333;word-break:break-word;text-align:left}
+.scroll-table th{background:#1f2937}
+.ai-chat-area textarea{height:60px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -39,7 +42,15 @@ th{background:#1f2937}
 
 <div id="tracker" style="display:none;">
 
-    <!-- Income Cards -->
+    <!-- AI Insights -->
+    <div class="section">
+        <div class="card">
+            <h2>🤖 Business AI Insights</h2>
+            <div id="aiStats" class="result-box"></div>
+        </div>
+    </div>
+
+    <!-- Income Calculators -->
     <div class="section">
         <div class="card">
             <h2>Daily Income</h2>
@@ -67,19 +78,21 @@ th{background:#1f2937}
     <div class="section">
         <div class="card">
             <h2>All Bookings</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Name</th>
-                        <th>Console</th>
-                        <th>Days</th>
-                        <th>Final Price (₹)</th>
-                        <th>Coupon</th>
-                    </tr>
-                </thead>
-                <tbody id="allBookingsTable"></tbody>
-            </table>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Console</th>
+                            <th>Days</th>
+                            <th>Final Price (₹)</th>
+                            <th>Coupon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allBookingsTable"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -89,19 +102,33 @@ th{background:#1f2937}
             <h2>Bookings by Month</h2>
             <input type="month" id="filterMonth">
             <button onclick="filterMonthlyBookings()">Show Bookings</button>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Name</th>
-                        <th>Console</th>
-                        <th>Days</th>
-                        <th>Final Price (₹)</th>
-                        <th>Coupon</th>
-                    </tr>
-                </thead>
-                <tbody id="monthlyBookingsTable"></tbody>
-            </table>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Console</th>
+                            <th>Days</th>
+                            <th>Final Price (₹)</th>
+                            <th>Coupon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyBookingsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Business AI Chat -->
+    <div class="section">
+        <div class="card">
+            <h2>💬 Ask AI About Your Business</h2>
+            <div class="ai-chat-area">
+                <textarea id="aiQuestion" placeholder="Ask about your bookings, income, reviews..."></textarea>
+                <button onclick="askBusinessAI()">Ask AI</button>
+            </div>
+            <div id="aiAnswer" class="result-box"></div>
         </div>
     </div>
 
@@ -110,7 +137,12 @@ th{background:#1f2937}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const PASSWORD = "YUVRAJ0011"; // change your password
+
+// 🔒 Change your password here
+const PASSWORD = "YUVRAJ0011"; // <--- change to your password
+
+// OpenAI API key
+const OPENAI_API_KEY = "YOUR_OPENAI_API_KEY"; // <--- put your OpenAI API key
 
 // Firebase config
 const firebaseConfig = {
@@ -120,24 +152,30 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let bookings = [];
+let reviews = {};
 
+// Password check
 function checkPassword(){
     const input = document.getElementById('adminPassword').value;
     if(input===PASSWORD){
         document.getElementById('tracker').style.display='block';
         loadBookings();
+        loadReviews();
     } else {
         alert("Wrong password!");
     }
 }
 
+// Load bookings
 async function loadBookings(){
     const snapshot = await fetch(firebaseConfig.databaseURL+'/bookings.json');
     const data = await snapshot.json();
-    bookings = data? Object.values(data) : [];
+    bookings = data ? Object.values(data) : [];
     displayAllBookings();
+    updateAIInsights();
 }
 
+// Display all bookings
 function displayAllBookings(){
     const tbody = document.getElementById('allBookingsTable');
     tbody.innerHTML="";
@@ -149,20 +187,19 @@ function displayAllBookings(){
     });
 }
 
+// Income calculations
 function calculateDaily(){
     const date=document.getElementById('dailyDate').value;
     const total = bookings.filter(b=>b.startDate===date)
                           .reduce((sum,b)=>sum+Number(b.finalPrice),0);
     document.getElementById('dailyResult').innerText=`Daily Income (${date}): ₹${total}`;
 }
-
 function calculateMonthly(){
-    const month=document.getElementById('monthlyDate').value; // YYYY-MM
+    const month=document.getElementById('monthlyDate').value; 
     const total = bookings.filter(b=>b.startDate.startsWith(month))
                           .reduce((sum,b)=>sum+Number(b.finalPrice),0);
     document.getElementById('monthlyResult').innerText=`Monthly Income (${month}): ₹${total}`;
 }
-
 function calculateYearly(){
     const year=document.getElementById('yearlyDate').value;
     const total = bookings.filter(b=>b.startDate.startsWith(year))
@@ -170,7 +207,7 @@ function calculateYearly(){
     document.getElementById('yearlyResult').innerText=`Yearly Income (${year}): ₹${total}`;
 }
 
-// Monthly Filter Table
+// Monthly filter table
 function filterMonthlyBookings(){
     const month=document.getElementById('filterMonth').value;
     const tbody=document.getElementById('monthlyBookingsTable');
@@ -183,11 +220,121 @@ function filterMonthlyBookings(){
         tbody.appendChild(tr);
     });
 }
+
+// Load reviews (rotating last 6)
+function loadReviews(){
+    db.ref('reviews').orderByChild('timestamp').on('value', snapshot => {
+        reviews = snapshot.val() || {};
+        updateAIInsights();
+    });
+}
+
+// --- AI Insights with suggestions ---
+function detectTrends(){
+    let today = new Date();
+    let month = today.toISOString().slice(0,7); 
+    const thisMonthRevenue = bookings.filter(b=>b.startDate.startsWith(month))
+                                     .reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    const lastMonth = new Date(today.getFullYear(), today.getMonth()-1,1).toISOString().slice(0,7);
+    const lastMonthRevenue = bookings.filter(b=>b.startDate.startsWith(lastMonth))
+                                     .reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    if(thisMonthRevenue > lastMonthRevenue) return `📈 Revenue increased by ₹${thisMonthRevenue-lastMonthRevenue} this month!`;
+    if(thisMonthRevenue < lastMonthRevenue) return `📉 Revenue decreased by ₹${lastMonthRevenue-thisMonthRevenue} this month!`;
+    return `⚖️ Revenue is stable compared to last month.`;
+}
+
+function generateRecommendations(){
+    const suggestions = [];
+    if(bookings.length<10) suggestions.push("💡 Promote PS5/Xbox discounts to attract more bookings.");
+    if(bookings.filter(b=>b.coupon && b.coupon!=='None').length/bookings.length < 0.3) 
+        suggestions.push("💡 Offer better coupons to increase usage.");
+    const totalReviews = Object.keys(reviews).length;
+    const avgRating = totalReviews>0 ? (Object.values(reviews).reduce((sum,r)=>sum+Number(r.rating),0)/totalReviews).toFixed(1) : 0;
+    if(avgRating < 4) suggestions.push("💡 Improve customer experience based on reviews.");
+    return suggestions.join("\n") || "Great job! Keep your business running smoothly! ✅";
+}
+
+function updateAIInsights(){
+    const totalBookings = bookings.length;
+    const totalRevenue = bookings.reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    const couponUsed = bookings.filter(b=>b.coupon && b.coupon!=='None').length;
+    const noCoupon = totalBookings - couponUsed;
+    const totalReviews = Object.keys(reviews).length;
+    const averageRating = totalReviews>0 
+        ? (Object.values(reviews).reduce((sum,r)=>sum+Number(r.rating),0)/totalReviews).toFixed(1)
+        : 0;
+    const recentReview = totalReviews>0 
+        ? Object.values(reviews).sort((a,b)=>b.timestamp-a.timestamp)[0]
+        : null;
+
+    const insights = `
+📊 Total Bookings: ${totalBookings}  
+💰 Total Revenue: ₹${totalRevenue}  
+🎟️ Bookings with Coupon: ${couponUsed}  
+❌ Bookings without Coupon: ${noCoupon}  
+⭐ Total Reviews: ${totalReviews} | Avg Rating: ${averageRating}  
+📝 Most Recent Review: ${recentReview ? recentReview.name + " - " + recentReview.message : "None"}
+
+${detectTrends()}
+
+💡 Suggestions:
+${generateRecommendations()}
+`;
+    document.getElementById('aiStats').innerText = insights;
+}
+
+// Mini AI Chat using OpenAI
+async function askBusinessAI(){
+    const question = document.getElementById('aiQuestion').value.trim();
+    if(!question){ alert("Type a question first!"); return; }
+
+    const context = `
+You are a business assistant for a gaming console rental. 
+Current stats:
+- Total bookings: ${bookings.length}
+- Revenue: ₹${bookings.reduce((sum,b)=>sum+Number(b.finalPrice),0)}
+- Bookings with coupon: ${bookings.filter(b=>b.coupon && b.coupon!=='None').length}
+- Bookings without coupon: ${bookings.filter(b=>!b.coupon || b.coupon==='None').length}
+- Total reviews: ${Object.keys(reviews).length}
+- Average rating: ${Object.keys(reviews).length>0 ? (Object.values(reviews).reduce((sum,r)=>sum+Number(r.rating),0)/Object.keys(reviews).length).toFixed(1) : 0}
+- Suggestions: ${generateRecommendations()}
+`;
+
+    const prompt = `${context}\n\nQuestion: ${question}\nAnswer in a helpful, actionable, and friendly tone.`;
+
+    const answerBox = document.getElementById('aiAnswer');
+    answerBox.innerText = "Thinking... 🤖";
+
+    try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role:"user", content: prompt}],
+                temperature: 0.7,
+                max_tokens: 400
+            })
+        });
+        const data = await response.json();
+        answerBox.innerText = data.choices[0].message.content;
+    } catch(e) {
+        answerBox.innerText = "Error connecting to AI. Check API key.";
+        console.error(e);
+    }
+}
 </script>
+
 </body>
 </html>
 
 
 
 
-  
+
+
+            
+
