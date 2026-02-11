@@ -2,234 +2,370 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<title>👑 Royal Games Premium Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Games Admin Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{font-family:Arial;background:#111;color:#fff;margin:0;padding:20px}
-h1,h2{margin-top:30px}
-.card{background:#1e1e1e;padding:15px;border-radius:12px;margin:15px 0}
-input,button{padding:8px;border-radius:6px;border:none}
-input{background:#222;color:#fff}
-button{background:#4CAF50;color:#fff;cursor:pointer}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
-.scroll-box{max-height:250px;overflow-y:auto}
-.hidden{display:none}
-#loginBox{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
-#loginBox .inner{background:#1e1e1e;padding:30px;border-radius:14px;text-align:center}
+body{
+margin:0;
+background:#0b0f1a;
+color:#fff;
+font-family:Roboto, sans-serif;
+}
+
+.header{
+background:linear-gradient(90deg,#111827,#1e293b);
+padding:20px;
+text-align:center;
+border-bottom:4px solid gold;
+}
+
+.header h1{
+color:gold;
+font-size:28px;
+}
+
+.section{
+padding:20px;
+}
+
+.card{
+background:#111827;
+border-radius:18px;
+padding:20px;
+margin:15px 0;
+box-shadow:0 0 20px rgba(0,255,255,.1);
+}
+
+h2{
+color:#facc15;
+margin-bottom:15px;
+}
+
+input,button{
+padding:12px;
+border-radius:10px;
+border:none;
+margin-top:8px;
+width:100%;
+font-size:15px;
+}
+
+input{
+background:#1f2937;
+color:white;
+}
+
+button{
+background:#22c55e;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+.tableBox{
+max-height:250px;
+overflow-y:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid #333;
+text-align:left;
+font-size:14px;
+}
+
+.expand{
+cursor:pointer;
+color:#38bdf8;
+margin-top:10px;
+display:inline-block;
+}
+
+#loginBox{
+position:fixed;
+inset:0;
+background:#000;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+#loginInner{
+background:#111827;
+padding:30px;
+border-radius:20px;
+width:300px;
+text-align:center;
+}
 </style>
 </head>
 <body>
 
 <div id="loginBox">
-<div class="inner">
-<h2>Admin Login</h2>
+<div id="loginInner">
+<h2>👑 Admin Login</h2>
 <input type="password" id="adminPass" placeholder="Enter Password">
-<br><br>
-<button onclick="checkPassword()">Enter</button>
+<button onclick="checkLogin()">Login</button>
 <p id="loginError" style="color:red"></p>
 </div>
 </div>
 
-<h1>Royal Games Dashboard</h1>
+<div class="header">
+<h1>Royal Games Premium Dashboard</h1>
+</div>
 
-<!-- RECENT BOOKINGS -->
-<h2>Recent 5 Bookings</h2>
-<div class="card scroll-box">
+<div class="section">
+
+<div class="card">
+<h2>🔍 Search Booking (Full Details)</h2>
+<input type="text" id="searchBox" placeholder="Enter Name or ID">
+<button onclick="searchBooking()">Search</button>
+<div id="searchResult"></div>
+</div>
+
+<div class="card">
+<h2>🕒 Recent 5 Bookings</h2>
+<div class="tableBox">
 <table>
 <thead>
 <tr>
 <th>Name</th>
 <th>Console</th>
-<th>Start Date</th>
+<th>Date</th>
 <th>Final ₹</th>
-<th>Coupon</th>
 </tr>
 </thead>
-<tbody id="recentBookings"></tbody>
+<tbody id="recentTable"></tbody>
 </table>
 </div>
-
-<!-- 10 DAY EARNINGS -->
-<h2>Last 10 Days Earnings</h2>
-<div class="card">
-<button onclick="toggleTenDays()">Show Details</button>
-<div id="tenDaysBox" class="hidden"></div>
 </div>
 
-<!-- MONTHLY REPORT -->
-<h2>Monthly Business Report</h2>
-<div class="card" id="monthlyReport"></div>
+<div class="card">
+<h2>📊 10 Days Earnings</h2>
+<div id="tenDayData" style="display:none"></div>
+<div class="expand" onclick="toggleTen()">Click to View Details</div>
+<div id="tenTotal" style="margin-top:10px;font-weight:bold"></div>
+</div>
 
-<!-- AI BRAIN -->
-<h2>Royal Games AI Brain 🧠</h2>
-<input type="text" id="aiQuestion" placeholder="Ask about growth, profit, upgrade...">
-<button onclick="askAI()">Ask</button>
-<div class="card" id="aiAnswer"></div>
+<div class="card">
+<h2>📅 Monthly Business Report</h2>
+<div id="monthlyReport"></div>
+</div>
+
+<div class="card">
+<h2>👥 Repeat Customers</h2>
+<div id="repeatCustomers"></div>
+</div>
+
+<div class="card">
+<h2>⭐ Customer Review Insight</h2>
+<div id="reviewInsight"></div>
+</div>
+
+<div class="card">
+<h2>🧠 Royal Games AI Brain</h2>
+<input type="text" id="aiQuestion" placeholder="Ask about growth, upgrade, profit">
+<button onclick="askAI()">Ask AI</button>
+<div id="aiAnswer" style="margin-top:10px"></div>
+</div>
+
+</div>
 
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-  authDomain: "royalgamesproject.firebaseapp.com",
-  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "royalgamesproject",
-  storageBucket: "royalgamesproject.firebasestorage.app",
-  messagingSenderId: "1008609758558",
-  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
+authDomain: "royalgamesproject.firebaseapp.com",
+databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "royalgamesproject",
+storageBucket: "royalgamesproject.firebasestorage.app",
+messagingSenderId: "1008609758558",
+appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
 };
 
 firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
+const db = firebase.database();
 
-let allBookings=[];
-
-function checkPassword(){
-if(document.getElementById('adminPass').value==="YUVRAJ01"){
-document.getElementById('loginBox').style.display="none";
-loadAll();
-}else{
-document.getElementById('loginError').innerText="Wrong Password";
-}
-}
-
-function loadAll(){
-db.ref("bookings").once("value",snap=>{
-allBookings=[];
-snap.forEach(child=>{
-allBookings.push(child.val());
-});
-
-allBookings.sort((a,b)=>b.timestamp-a.timestamp);
-
+function checkLogin(){
+if(document.getElementById("adminPass").value==="YUVRAJ01"){
+document.getElementById("loginBox").style.display="none";
 loadRecent();
 loadTenDays();
 loadMonthly();
+loadRepeat();
+loadReviews();
+}else{
+document.getElementById("loginError").innerText="Wrong Password";
+}
+}
+
+function searchBooking(){
+let val=document.getElementById("searchBox").value.toLowerCase();
+let box=document.getElementById("searchResult");
+box.innerHTML="Searching...";
+db.ref("bookings").once("value",snap=>{
+let html="";
+snap.forEach(child=>{
+let d=child.val();
+let id=child.key;
+if(id.toLowerCase().includes(val)||d.name.toLowerCase().includes(val)){
+html+=`<div style="margin-top:10px">
+<b>ID:</b> ${id}<br>
+<b>Name:</b> ${d.name}<br>
+<b>Phone:</b> ${d.phone}<br>
+<b>Console:</b> ${d.console}<br>
+<b>Date:</b> ${d.startDate}<br>
+<b>Days:</b> ${d.days}<br>
+<b>Coupon:</b> ${d.coupon}<br>
+<b>Final Price:</b> ₹${d.finalPrice}
+</div><hr>`;
+}
+});
+box.innerHTML=html||"No booking found";
 });
 }
 
 function loadRecent(){
-let html="";
-let recent=allBookings.slice(0,5);
-recent.forEach(b=>{
-html+=`
-<tr>
-<td>${b.name}</td>
-<td>${b.console}</td>
-<td>${b.startDate}</td>
-<td>₹${b.finalPrice}</td>
-<td>${b.coupon||"No"}</td>
+db.ref("bookings").limitToLast(5).once("value",snap=>{
+let rows="";
+snap.forEach(child=>{
+let d=child.val();
+rows+=`<tr>
+<td>${d.name}</td>
+<td>${d.console}</td>
+<td>${d.startDate}</td>
+<td>₹${d.finalPrice}</td>
 </tr>`;
 });
-document.getElementById("recentBookings").innerHTML=html;
+document.getElementById("recentTable").innerHTML=rows;
+});
 }
 
-function toggleTenDays(){
-let box=document.getElementById("tenDaysBox");
-box.classList.toggle("hidden");
+function toggleTen(){
+let box=document.getElementById("tenDayData");
+box.style.display=box.style.display==="none"?"block":"none";
 }
 
 function loadTenDays(){
-let today=new Date();
 let total=0;
-let html="<br>";
-
-allBookings.forEach(b=>{
-let d=new Date(b.startDate);
-let diff=(today-d)/(1000*60*60*24);
+let html="";
+let today=new Date();
+db.ref("bookings").once("value",snap=>{
+snap.forEach(child=>{
+let d=child.val();
+let diff=(today-new Date(d.startDate))/(1000*3600*24);
 if(diff<=10){
-total+=Number(b.finalPrice);
-html+=`${b.name} - ₹${b.finalPrice}<br>`;
+html+=`${d.name} - ₹${d.finalPrice}<br>`;
+total+=Number(d.finalPrice);
 }
 });
-
-html+=`<br><b>Total Last 10 Days: ₹${total}</b>`;
-document.getElementById("tenDaysBox").innerHTML=html;
+document.getElementById("tenDayData").innerHTML=html||"No recent earnings";
+document.getElementById("tenTotal").innerText="Total (10 Days): ₹"+total;
+});
 }
 
 function loadMonthly(){
-let month=new Date().toISOString().slice(0,7);
-let total=0;
-let totalBooking=0;
-let couponCount=0;
-let totalDiscount=0;
-let noCouponRevenue=0;
-let repeatCount={};
-
-allBookings.forEach(b=>{
-if(b.startDate.startsWith(month)){
-totalBooking++;
-total+=Number(b.finalPrice);
-
-if(b.coupon && b.coupon!=="N/A"){
+let total=0,couponCount=0,noCoupon=0,discountTotal=0;
+db.ref("bookings").once("value",snap=>{
+snap.forEach(child=>{
+let d=child.val();
+total++;
+if(d.coupon && d.coupon!=="None"){
 couponCount++;
-totalDiscount+=Number(b.discount||0);
+discountTotal+=Number(d.discount||0);
 }else{
-noCouponRevenue+=Number(b.finalPrice);
-}
-
-if(repeatCount[b.phone]) repeatCount[b.phone]++;
-else repeatCount[b.phone]=1;
+noCoupon++;
 }
 });
-
-let repeatPeople=0;
-for(let p in repeatCount){
-if(repeatCount[p]>1) repeatPeople++;
+document.getElementById("monthlyReport").innerHTML=
+`Total Bookings: ${total}<br>
+Coupon Used: ${couponCount}<br>
+No Coupon: ${noCoupon}<br>
+Total Discount Given: ₹${discountTotal}`;
+});
 }
 
-document.getElementById("monthlyReport").innerHTML=`
-Total Bookings: ${totalBooking}<br>
-Total Revenue: ₹${total}<br>
-Coupon Used: ${couponCount} times<br>
-Total Coupon Discount: ₹${totalDiscount}<br>
-Revenue Without Coupon: ₹${noCouponRevenue}<br>
-Repeat Customers This Month: ${repeatPeople}
-`;
+function loadRepeat(){
+let map={};
+db.ref("bookings").once("value",snap=>{
+snap.forEach(child=>{
+let d=child.val();
+if(map[d.phone]) map[d.phone]++;
+else map[d.phone]=1;
+});
+let html="";
+for(let p in map){
+if(map[p]>1) html+=p+" booked "+map[p]+" times<br>";
+}
+document.getElementById("repeatCustomers").innerHTML=html||"No repeat yet";
+});
+}
+
+function loadReviews(){
+db.ref("reviews").once("value",snap=>{
+let good=0,bad=0,total=0;
+snap.forEach(child=>{
+let r=child.val();
+total++;
+if(r.rating>=4) good++;
+else bad++;
+});
+document.getElementById("reviewInsight").innerHTML=
+`Total Reviews: ${total}<br>
+Happy Customers: ${good}<br>
+Need Improvement: ${bad}`;
+});
 }
 
 function askAI(){
 let q=document.getElementById("aiQuestion").value.toLowerCase();
-let month=new Date().toISOString().slice(0,7);
-let revenue=0;
-let bookings=0;
+let box=document.getElementById("aiAnswer");
+box.innerHTML="Analyzing...";
 
-allBookings.forEach(b=>{
-if(b.startDate.startsWith(month)){
-bookings++;
-revenue+=Number(b.finalPrice);
-}
+db.ref("bookings").once("value",snap=>{
+let revenue=0,count=0;
+snap.forEach(child=>{
+let d=child.val();
+revenue+=Number(d.finalPrice);
+count++;
 });
+let avg=count?Math.round(revenue/count):0;
+let reply=`Total Revenue: ₹${revenue}<br>
+Average Booking: ₹${avg}<br><br>`;
 
-let avg=bookings? (revenue/bookings).toFixed(2):0;
+if(q.includes("growth")) reply+="Run weekend offers & Instagram ads.";
+else if(q.includes("upgrade")) reply+="Add PS5 Pro & extra controllers.";
+else if(q.includes("profit")) reply+="Reduce coupon discounts slightly.";
+else reply+="Improve repeat customer loyalty program.";
 
-let reply=`This Month Revenue: ₹${revenue}<br>
-Total Bookings: ${bookings}<br>
-Average Booking Value: ₹${avg}<br><br>`;
-
-if(q.includes("growth")){
-reply+="To grow business increase weekend offers and push repeat customers.";
-}
-else if(q.includes("upgrade")){
-reply+="Upgrade when revenue grows consistently 3 months above current average.";
-}
-else if(q.includes("profit")){
-reply+="Reduce coupon usage slightly to increase net profit.";
-}
-else{
-reply+="Focus on marketing + loyalty rewards.";
-}
-
-document.getElementById("aiAnswer").innerHTML=reply;
+box.innerHTML=reply;
+});
 }
 
 </script>
 </body>
-</html> 
+</html>
+
+
+
+
+
+
+
+
 
 
 
