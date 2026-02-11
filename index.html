@@ -189,7 +189,7 @@ let d=c.val();
 if(d.status!=="Completed") return;
 let bd=new Date(d.startDate);
 let diff=(today-bd)/(1000*60*60*24);
-if(diff<=10){
+if(diff<=10) {
 total+=Number(d.finalPrice||0);
 count++;
 }
