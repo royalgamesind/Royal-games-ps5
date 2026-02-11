@@ -309,7 +309,33 @@ Cancelled: ${cancelled}<br>
 Revenue: ₹${total}`;
 });
 }
+function deleteReviewsByMonth(){
 
+let m=document.getElementById("reviewMonthSelect").value;
+let y=document.getElementById("reviewYearSelect").value;
+
+if(!confirm("Are you sure you want to delete reviews for selected month?")) return;
+
+let deletedCount=0;
+
+db.ref("reviews").once("value",snap=>{
+snap.forEach(c=>{
+let d=c.val();
+if(!d.timestamp) return;
+
+let reviewDate=new Date(d.timestamp);
+
+if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){
+db.ref("reviews/"+c.key).remove();
+deletedCount++;
+}
+});
+
+document.getElementById("deleteReviewResult").innerHTML=
+`Deleted Reviews: ${deletedCount}`;
+});
+}
+  
 </script>
 </body>
 </html>
