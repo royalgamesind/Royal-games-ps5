@@ -27,7 +27,6 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginBox">
 <div style="background:#111827;padding:40px;border-radius:20px;
 width:320px;text-align:center;border:2px solid gold;
@@ -41,7 +40,6 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 
 <h1>Royal Games Dashboard</h1>
 
-<!-- SEARCH -->
 <div class="section card">
 <h2>Search Booking</h2>
 <input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
@@ -51,7 +49,6 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 </div>
 </div>
 
-<!-- RECENT -->
 <div class="section card">
 <h2>Recent 5 Bookings</h2>
 <div class="table-box">
@@ -59,13 +56,11 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 </div>
 </div>
 
-<!-- 10 DAYS -->
 <div class="section card">
 <h2>Last 10 Days Performance</h2>
 <div id="tenDaysData"></div>
 </div>
 
-<!-- MONTHLY -->
 <div class="section card">
 <h2>Monthly Performance</h2>
 <select id="monthSelect"></select>
@@ -74,7 +69,6 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 <div id="monthlyResult"></div>
 </div>
 
-<!-- YEARLY -->
 <div class="section card">
 <h2>Yearly Performance</h2>
 <select id="yearOnlySelect"></select>
@@ -86,13 +80,10 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 
 /******** FIREBASE ********/
 const firebaseConfig = {
-  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-  authDomain: "royalgamesproject.firebaseapp.com",
-  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "royalgamesproject",
-  storageBucket: "royalgamesproject.firebasestorage.app",
-  messagingSenderId: "1008609758558",
-  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+apiKey: "YOUR KEY",
+authDomain: "royalgamesproject.firebaseapp.com",
+databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "royalgamesproject",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -110,6 +101,14 @@ document.getElementById("loginError").innerText="Wrong Password";
 }
 }
 
+/******** STATUS SYSTEM ********/
+function getStatus(d){
+if(d.status==="cancelled") return "Cancelled ❌";
+let end=new Date(d.startDate);
+end.setDate(end.getDate()+Number(d.days));
+return new Date()>end ? "Completed ✅" : "Active 🟢";
+}
+
 /******** TABLE ROW ********/
 function rowHTML(id,d){
 return `<tr>
@@ -120,6 +119,7 @@ return `<tr>
 <td>${d.startDate||''}</td>
 <td>${d.days||''}</td>
 <td>₹${d.finalPrice||0}</td>
+<td>${getStatus(d)}</td>
 <td><button class="danger" onclick="cancelBooking('${id}')">Cancel</button></td>
 </tr>`;
 }
@@ -130,7 +130,7 @@ db.ref("bookings").limitToLast(5).on("value",snap=>{
 let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Action</th></tr>`;
+<th>Final</th><th>Status</th><th>Action</th></tr>`;
 snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
 document.getElementById("recentTable").innerHTML=html;
 });
@@ -143,7 +143,7 @@ db.ref("bookings").once("value",snap=>{
 let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Action</th></tr>`;
+<th>Final</th><th>Status</th><th>Action</th></tr>`;
 snap.forEach(c=>{
 let d=c.val();
 if(c.key.toLowerCase().includes(val)||
@@ -155,16 +155,19 @@ document.getElementById("searchTable").innerHTML=html;
 });
 }
 
-/******** CANCEL ********/
+/******** CANCEL (NO DELETE) ********/
 function cancelBooking(id){
 if(confirm("Cancel booking?")){
-db.ref("bookings/"+id).remove();
+db.ref("bookings/"+id).update({
+status:"cancelled",
+cancelledAt:Date.now()
+});
 }
 }
 
 /******** 10 DAYS ********/
 function tenDays(){
-let total=0,count=0;
+let total=0,count=0,cancelled=0;
 let today=new Date();
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
@@ -173,73 +176,80 @@ if(!d.startDate) return;
 let bd=new Date(d.startDate);
 let diff=(today-bd)/(1000*60*60*24);
 if(diff<=10){
+if(d.status==="cancelled"){cancelled++;return;}
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
 document.getElementById("tenDaysData").innerHTML=
-`Total Bookings: ${count}<br>Total Earnings: ₹${total}`;
+`Total Bookings: ${count}<br>
+Cancelled: ${cancelled}<br>
+Total Earnings: ₹${total}`;
 });
 }
 
 /******** SELECTORS ********/
 function populateSelectors(){
 for(let m=1;m<=12;m++){
-document.getElementById("monthSelect").innerHTML+=
-`<option value="${m}">${m}</option>`;
+monthSelect.innerHTML+=`<option value="${m}">${m}</option>`;
 }
 let currentYear=new Date().getFullYear();
 for(let y=currentYear;y>=2023;y--){
-document.getElementById("yearSelect").innerHTML+=
-`<option>${y}</option>`;
-document.getElementById("yearOnlySelect").innerHTML+=
-`<option>${y}</option>`;
+yearSelect.innerHTML+=`<option>${y}</option>`;
+yearOnlySelect.innerHTML+=`<option>${y}</option>`;
 }
 }
 
 /******** MONTHLY ********/
 function calculateMonthly(){
-let m=document.getElementById("monthSelect").value;
-let y=document.getElementById("yearSelect").value;
-let total=0,count=0;
+let m=monthSelect.value;
+let y=yearSelect.value;
+let total=0,count=0,cancelled=0;
+
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
 if((bd.getMonth()+1)==m && bd.getFullYear()==y){
+if(d.status==="cancelled"){cancelled++;return;}
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
-document.getElementById("monthlyResult").innerHTML=
-`Total Bookings: ${count}<br>Total Revenue: ₹${total}`;
+monthlyResult.innerHTML=
+`Total Bookings: ${count}<br>
+Cancelled: ${cancelled}<br>
+Revenue: ₹${total}`;
 });
 }
 
 /******** YEARLY ********/
 function calculateYearly(){
-let y=document.getElementById("yearOnlySelect").value;
-let total=0,count=0;
+let y=yearOnlySelect.value;
+let total=0,count=0,cancelled=0;
+
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
 if(bd.getFullYear()==y){
+if(d.status==="cancelled"){cancelled++;return;}
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
-document.getElementById("yearlyResult").innerHTML=
-`Total Bookings: ${count}<br>Total Revenue: ₹${total}`;
+yearlyResult.innerHTML=
+`Total Bookings: ${count}<br>
+Cancelled: ${cancelled}<br>
+Revenue: ₹${total}`;
 });
 }
 
 </script>
 </body>
 </html>
-
 
 
 
