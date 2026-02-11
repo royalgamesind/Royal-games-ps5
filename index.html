@@ -1,89 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Games Admin</title>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-<style>
-body{margin:0;font-family:Segoe UI;background:#0b0f1a;color:#fff;padding:20px}
-h1{text-align:center;color:gold}
-.section{margin-top:30px}
-.card{background:#111827;padding:20px;border-radius:18px;margin-top:15px;box-shadow:0 0 15px rgba(255,215,0,.08)}
-input,select,button{padding:10px;border-radius:8px;border:none;margin:5px 0}
-input,select{background:#1f2937;color:#fff}
-button{background:gold;color:#000;font-weight:bold;cursor:pointer}
-button.danger{background:#e53935;color:#fff}
-.table-box{max-height:260px;overflow-y:auto;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
-th{color:#facc15}
-#loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
-display:flex;align-items:center;justify-content:center;z-index:9999}
-</style>
-</head>
-<body>
-
-<div id="loginBox">
-<div style="background:#111827;padding:40px;border-radius:20px;
-width:320px;text-align:center;border:2px solid gold;
-box-shadow:0 0 25px rgba(255,215,0,.3)">
-<h2 style="color:gold">👑 Royal Admin</h2>
-<input type="password" id="adminPass" placeholder="Enter Password" style="width:100%">
-<button onclick="checkPassword()" style="width:100%">Login</button>
-<p id="loginError" style="color:#f87171"></p>
-</div>
-</div>
-
-<h1>Royal Games Dashboard</h1>
-
-<div class="section card">
-<h2>Search Booking</h2>
-<input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
-<button onclick="searchBooking()">Search</button>
-<div class="table-box">
-<table id="searchTable"></table>
-</div>
-</div>
-
-<div class="section card">
-<h2>Recent 5 Bookings</h2>
-<div class="table-box">
-<table id="recentTable"></table>
-</div>
-</div>
-
-<div class="section card">
-<h2>Last 10 Days Performance</h2>
-<div id="tenDaysData"></div>
-</div>
-
-<div class="section card">
-<h2>Monthly Performance</h2>
-<select id="monthSelect"></select>
-<select id="yearSelect"></select>
-<button onclick="calculateMonthly()">Check</button>
-<div id="monthlyResult"></div>
-</div>
-
-<div class="section card">
-<h2>Yearly Performance</h2>
-<select id="yearOnlySelect"></select>
-<button onclick="calculateYearly()">Check</button>
-<div id="yearlyResult"></div>
-</div>
-
 <script>
 
 /******** FIREBASE ********/
 const firebaseConfig = {
-apiKey: "YOUR KEY",
-authDomain: "royalgamesproject.firebaseapp.com",
-databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId: "royalgamesproject",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH",
+  databaseURL: "YOUR_DB_URL",
+  projectId: "YOUR_PROJECT_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -103,14 +25,27 @@ document.getElementById("loginError").innerText="Wrong Password";
 
 /******** STATUS SYSTEM ********/
 function getStatus(d){
-if(d.status==="cancelled") return "Cancelled ❌";
-let end=new Date(d.startDate);
-end.setDate(end.getDate()+Number(d.days));
-return new Date()>end ? "Completed ✅" : "Active 🟢";
+if(d.status==="Cancelled") return "Cancelled";
+
+if(!d.startDate || !d.days) return "Active";
+
+let start=new Date(d.startDate);
+let end=new Date(start);
+end.setDate(start.getDate()+Number(d.days));
+
+let today=new Date();
+
+if(today > end){
+return "Completed";
+}else{
+return "Active";
+}
 }
 
 /******** TABLE ROW ********/
 function rowHTML(id,d){
+let status=getStatus(d);
+
 return `<tr>
 <td>${id}</td>
 <td>${d.name||''}</td>
@@ -119,8 +54,11 @@ return `<tr>
 <td>${d.startDate||''}</td>
 <td>${d.days||''}</td>
 <td>₹${d.finalPrice||0}</td>
-<td>${getStatus(d)}</td>
-<td><button class="danger" onclick="cancelBooking('${id}')">Cancel</button></td>
+<td>${status}</td>
+<td>
+${status==="Cancelled" ? "" :
+`<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`}
+</td>
 </tr>`;
 }
 
@@ -155,12 +93,12 @@ document.getElementById("searchTable").innerHTML=html;
 });
 }
 
-/******** CANCEL (NO DELETE) ********/
+/******** CANCEL ********/
 function cancelBooking(id){
 if(confirm("Cancel booking?")){
 db.ref("bookings/"+id).update({
-status:"cancelled",
-cancelledAt:Date.now()
+status:"Cancelled",
+cancelTime:Date.now()
 });
 }
 }
@@ -169,18 +107,28 @@ cancelledAt:Date.now()
 function tenDays(){
 let total=0,count=0,cancelled=0;
 let today=new Date();
+
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
+let status=getStatus(d);
+
+if(status==="Cancelled"){
+cancelled++;
+return;
+}
+
 if(!d.startDate) return;
+
 let bd=new Date(d.startDate);
 let diff=(today-bd)/(1000*60*60*24);
+
 if(diff<=10){
-if(d.status==="cancelled"){cancelled++;return;}
 total+=Number(d.finalPrice||0);
 count++;
 }
 });
+
 document.getElementById("tenDaysData").innerHTML=
 `Total Bookings: ${count}<br>
 Cancelled: ${cancelled}<br>
@@ -191,70 +139,82 @@ Total Earnings: ₹${total}`;
 /******** SELECTORS ********/
 function populateSelectors(){
 for(let m=1;m<=12;m++){
-monthSelect.innerHTML+=`<option value="${m}">${m}</option>`;
+document.getElementById("monthSelect").innerHTML+=
+`<option value="${m}">${m}</option>`;
 }
 let currentYear=new Date().getFullYear();
 for(let y=currentYear;y>=2023;y--){
-yearSelect.innerHTML+=`<option>${y}</option>`;
-yearOnlySelect.innerHTML+=`<option>${y}</option>`;
+document.getElementById("yearSelect").innerHTML+=
+`<option>${y}</option>`;
+document.getElementById("yearOnlySelect").innerHTML+=
+`<option>${y}</option>`;
 }
 }
 
 /******** MONTHLY ********/
 function calculateMonthly(){
-let m=monthSelect.value;
-let y=yearSelect.value;
+let m=document.getElementById("monthSelect").value;
+let y=document.getElementById("yearSelect").value;
 let total=0,count=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
+let status=getStatus(d);
+
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
+
 if((bd.getMonth()+1)==m && bd.getFullYear()==y){
-if(d.status==="cancelled"){cancelled++;return;}
+
+if(status==="Cancelled"){
+cancelled++;
+}else{
 total+=Number(d.finalPrice||0);
 count++;
 }
+}
 });
-monthlyResult.innerHTML=
+
+document.getElementById("monthlyResult").innerHTML=
 `Total Bookings: ${count}<br>
 Cancelled: ${cancelled}<br>
-Revenue: ₹${total}`;
+Total Revenue: ₹${total}`;
 });
 }
 
 /******** YEARLY ********/
 function calculateYearly(){
-let y=yearOnlySelect.value;
+let y=document.getElementById("yearOnlySelect").value;
 let total=0,count=0,cancelled=0;
 
 db.ref("bookings").once("value",snap=>{
 snap.forEach(c=>{
 let d=c.val();
+let status=getStatus(d);
+
 if(!d.startDate) return;
 let bd=new Date(d.startDate);
+
 if(bd.getFullYear()==y){
-if(d.status==="cancelled"){cancelled++;return;}
+
+if(status==="Cancelled"){
+cancelled++;
+}else{
 total+=Number(d.finalPrice||0);
 count++;
 }
+}
 });
-yearlyResult.innerHTML=
+
+document.getElementById("yearlyResult").innerHTML=
 `Total Bookings: ${count}<br>
 Cancelled: ${cancelled}<br>
-Revenue: ₹${total}`;
+Total Revenue: ₹${total}`;
 });
 }
 
-</script>
-</body>
-</html>
-
-
-
-
-
+  </script>
 
 
 
