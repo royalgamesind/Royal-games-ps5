@@ -2,176 +2,192 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Royal Games Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Games Winner Reveal 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto&display=swap" rel="stylesheet">
 <style>
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle at top, #0a0a0f, #11111a);
-  font-family: 'Arial', sans-serif;
-  color: #fff;
-  overflow: hidden;
-}
-
-h1 {
-  text-align:center;
-  text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
-  margin-bottom: 10px;
-  font-size: 2rem;
-}
-
-input, button {
-  padding: 12px;
-  margin: 5px;
-  border-radius: 10px;
-  border: none;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-button {
-  cursor: pointer;
-  background: linear-gradient(45deg,#ff4500,#ffcc00);
-  color: #000;
-  font-weight: bold;
-  box-shadow: 0 0 10px #ffcc00;
-  transition: 0.3s;
-}
-
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px #ff4500, 0 0 40px #ffcc00 inset;
-}
-
-/* Winner Section */
-#winner-section {
-  display: none;
-  position: relative;
-  width: 90%;
-  max-width: 500px;
-  height: 60%;
-  margin-top: 20px;
-  background: url('ChatGPT Image Feb 11, 2026, 05_06_43 PM.png') center/cover no-repeat;
-  border-radius: 20px;
-  box-shadow: 0 0 30px #0ff, 0 0 60px #0ff inset;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Prize Text Background Overlay */
-#text-overlay {
-  background: rgba(0,0,0,0.5); /* dark overlay for text readability */
-  border-radius: 15px;
-  padding: 20px;
-  text-align: center;
-}
-
-#prize-text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #0ff;
-  text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
-  animation: glow 1.5s infinite alternate;
-}
-
-#coupon-text {
-  font-size: 20px;
-  margin-top: 10px;
-  color: #ff0;
-  text-shadow: 0 0 5px #ff0, 0 0 10px #ff0;
-  animation: glow 1.5s infinite alternate;
-}
-
-@keyframes glow {
-  0% { text-shadow: 0 0 5px #0ff, 0 0 15px #0ff; }
-  100% { text-shadow: 0 0 15px #0ff, 0 0 30px #0ff; }
-}
-
-/* Confetti */
-.confetti {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  animation: fall 1.5s linear forwards;
-  opacity: 0.9;
-}
-@keyframes fall {
-  0% {transform: translateY(0) rotate(0deg);}
-  100% {transform: translateY(400px) rotate(720deg); opacity: 0;}
-}
+body{margin:0;font-family:'Roboto',sans-serif;background:#0b0f1a;color:#fff}
+.header{background:linear-gradient(90deg,#111827,#1e293b);padding:25px 15px;text-align:center;border-bottom:4px solid gold}
+.header h1{margin:0;font-family:'Orbitron',sans-serif;color:gold;font-size:36px;letter-spacing:3px}
+.section{padding:20px 15px}
+.card{background:#111827;border-radius:20px;padding:20px;margin:20px auto;max-width:800px;box-shadow:0 0 20px rgba(0,255,255,.1);transition:.3s}
+.card:hover{transform:translateY(-5px);box-shadow:0 0 25px rgba(0,255,255,.3)}
+.card h2{font-family:'Orbitron',sans-serif;color:#0ea5e9;margin-bottom:15px}
+input, select, button{padding:12px;margin:6px 0;border-radius:12px;border:none;font-size:16px}
+input, select{width:95%;background:#1f2937;color:#fff}
+button{background:#25D366;color:#fff;font-weight:bold;cursor:pointer;transition:.3s}
+button:hover{background:#1ebe57}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:10px;text-align:left;border-bottom:1px solid #333}
+th{background:#1f2937}
+.result-box{background:#22c55e;color:#0b0f1a;font-weight:bold;padding:12px;border-radius:12px;margin-top:10px}
 </style>
 </head>
 <body>
 
-<h1>🎮 Royal Games Winner 💌</h1>
-<p>Enter your winner password:</p>
-<input type="text" id="winnerCode" placeholder="Enter password">
-<button onclick="showWinner()">Reveal Your Gift</button>
-
-<div id="winner-section">
-  <div id="text-overlay">
-    <div id="prize-text"></div>
-    <div id="coupon-text"></div>
-  </div>
+<div class="header">
+    <h1>👑 ROYAL GAMES ADMIN</h1>
 </div>
 
+<div class="section">
+    <div class="card center">
+        <h2>Password Login</h2>
+        <input type="password" id="adminPassword" placeholder="Enter password">
+        <button onclick="checkPassword()">Login</button>
+    </div>
+</div>
+
+<div id="tracker" style="display:none;">
+
+    <!-- Income Cards -->
+    <div class="section">
+        <div class="card">
+            <h2>Daily Income</h2>
+            <input type="date" id="dailyDate">
+            <button onclick="calculateDaily()">Calculate Daily Income</button>
+            <div id="dailyResult" class="result-box"></div>
+        </div>
+
+        <div class="card">
+            <h2>Monthly Income</h2>
+            <input type="month" id="monthlyDate">
+            <button onclick="calculateMonthly()">Calculate Monthly Income</button>
+            <div id="monthlyResult" class="result-box"></div>
+        </div>
+
+        <div class="card">
+            <h2>Yearly Income</h2>
+            <input type="number" id="yearlyDate" placeholder="YYYY">
+            <button onclick="calculateYearly()">Calculate Yearly Income</button>
+            <div id="yearlyResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <!-- All Bookings -->
+    <div class="section">
+        <div class="card">
+            <h2>All Bookings</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Console</th>
+                        <th>Days</th>
+                        <th>Final Price (₹)</th>
+                        <th>Coupon</th>
+                    </tr>
+                </thead>
+                <tbody id="allBookingsTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Monthly Filter -->
+    <div class="section">
+        <div class="card">
+            <h2>Bookings by Month</h2>
+            <input type="month" id="filterMonth">
+            <button onclick="filterMonthlyBookings()">Show Bookings</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Console</th>
+                        <th>Days</th>
+                        <th>Final Price (₹)</th>
+                        <th>Coupon</th>
+                    </tr>
+                </thead>
+                <tbody id="monthlyBookingsTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-// Winner data
-const winners = {
-  "WINNER10": { prize:"🥇 1 Day PS5 Rental FREE", code:"CONGRATS100" },
-  "WINNER02": { prize:"🥈 50% OFF", code:"CONGRATS50" },
-  "WINNER45": { prize:"🥉 40% OFF", code:"CONGRATS40" }
+const PASSWORD = "YUVRAJ0011"; // change your password
+
+// Firebase config
+const firebaseConfig = {
+  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-const winnerSection = document.getElementById('winner-section');
-const prizeText = document.getElementById('prize-text');
-const couponText = document.getElementById('coupon-text');
+let bookings = [];
 
-function showWinner() {
-  const code = document.getElementById('winnerCode').value.trim().toUpperCase();
-  if(winners[code]){
-    const winner = winners[code];
-    prizeText.innerHTML = winner.prize;
-    couponText.innerHTML = `Coupon: ${winner.code}<br>Valid for 1-day rental only`;
-    winnerSection.style.display = "flex";
-    createConfetti();
-  } else {
-    alert("❌ Invalid password! Only winners can see their gift.");
-  }
+function checkPassword(){
+    const input = document.getElementById('adminPassword').value;
+    if(input===PASSWORD){
+        document.getElementById('tracker').style.display='block';
+        loadBookings();
+    } else {
+        alert("Wrong password!");
+    }
 }
 
-// Confetti
-function createConfetti(){
-  for(let i=0;i<50;i++){
-    const conf = document.createElement('div');
-    conf.classList.add('confetti');
-    conf.style.background = randomColor();
-    conf.style.left = Math.random()*window.innerWidth + "px";
-    conf.style.top = "0px";
-    conf.style.width = conf.style.height = Math.random()*10 + 5 + "px";
-    document.body.appendChild(conf);
-    setTimeout(()=> conf.remove(),1600);
-  }
+async function loadBookings(){
+    const snapshot = await fetch(firebaseConfig.databaseURL+'/bookings.json');
+    const data = await snapshot.json();
+    bookings = data? Object.values(data) : [];
+    displayAllBookings();
 }
-function randomColor(){
-  const colors = ['#ff0','#ff4500','#0ff','#f0f','#0f0','#fff'];
-  return colors[Math.floor(Math.random()*colors.length)];
+
+function displayAllBookings(){
+    const tbody = document.getElementById('allBookingsTable');
+    tbody.innerHTML="";
+    bookings.forEach(b=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${b.startDate}</td><td>${b.name}</td><td>${b.console}</td>
+        <td>${b.days}</td><td>${b.finalPrice}</td><td>${b.coupon}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function calculateDaily(){
+    const date=document.getElementById('dailyDate').value;
+    const total = bookings.filter(b=>b.startDate===date)
+                          .reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    document.getElementById('dailyResult').innerText=`Daily Income (${date}): ₹${total}`;
+}
+
+function calculateMonthly(){
+    const month=document.getElementById('monthlyDate').value; // YYYY-MM
+    const total = bookings.filter(b=>b.startDate.startsWith(month))
+                          .reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    document.getElementById('monthlyResult').innerText=`Monthly Income (${month}): ₹${total}`;
+}
+
+function calculateYearly(){
+    const year=document.getElementById('yearlyDate').value;
+    const total = bookings.filter(b=>b.startDate.startsWith(year))
+                          .reduce((sum,b)=>sum+Number(b.finalPrice),0);
+    document.getElementById('yearlyResult').innerText=`Yearly Income (${year}): ₹${total}`;
+}
+
+// Monthly Filter Table
+function filterMonthlyBookings(){
+    const month=document.getElementById('filterMonth').value;
+    const tbody=document.getElementById('monthlyBookingsTable');
+    tbody.innerHTML="";
+    bookings.filter(b=>b.startDate.startsWith(month))
+            .forEach(b=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${b.startDate}</td><td>${b.name}</td><td>${b.console}</td>
+        <td>${b.days}</td><td>${b.finalPrice}</td><td>${b.coupon}</td>`;
+        tbody.appendChild(tr);
+    });
 }
 </script>
-
 </body>
 </html>
 
 
 
 
-    
+  
