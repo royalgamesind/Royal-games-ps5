@@ -347,6 +347,32 @@ document.getElementById("deleteReviewResult").innerHTML=
 `Deleted Reviews: ${deletedCount}`;
 });
 }
+  function deleteBookingsByYear(){
+
+let y=document.getElementById("deleteYearSelect").value;
+
+if(!confirm("Delete ALL bookings for selected year?")) return;
+
+let deletedCount=0;
+
+db.ref("bookings").once("value",snap=>{
+snap.forEach(c=>{
+let d=c.val();
+if(!d.startDate) return;
+
+let bookingDate=new Date(d.startDate);
+
+if(bookingDate.getFullYear()==y){
+db.ref("bookings/"+c.key).remove();
+deletedCount++;
+}
+});
+
+document.getElementById("deleteYearResult").innerHTML=
+`Deleted Bookings: ${deletedCount}`;
+});
+  }
+  
   
 </script>
 </body>
