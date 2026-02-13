@@ -609,7 +609,8 @@ document.getElementById("topVisitors").innerHTML = html;
   let prompt = "Give 3 growth ideas for a gaming rental business.";
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await  fetch("https://royal-ai-games.vercel.app/api/chat", {
+
       method: "POST",
       headers: {
         "Content-Type": "application/json"
