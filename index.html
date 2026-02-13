@@ -616,6 +616,14 @@ document.getElementById("topVisitors").innerHTML = html;
   const data = await response.json();
   return data.reply;
   }
+  async function testAI() {
+  let prompt = "Give 3 growth ideas for a gaming rental business.";
+
+  let reply = await callRoyalAI(prompt);
+
+  document.getElementById("aiResult").innerHTML =
+    "<pre>" + reply + "</pre>";
+  }
   
   
   
