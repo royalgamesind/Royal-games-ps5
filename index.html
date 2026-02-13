@@ -438,6 +438,75 @@ html+="</ol>";
 document.getElementById("vipResult").innerHTML=html;
 });
   }
+  function loadCustomerProfile(phone){
+
+if(!phone){
+alert("Phone not found");
+return;
+}
+
+let totalSpent=0;
+let totalBookings=0;
+let completed=0;
+let cancelled=0;
+
+let historyHTML="<h3>Booking History</h3><ul>";
+
+db.ref("bookings").once("value",snap=>{
+
+snap.forEach(c=>{
+let d=c.val();
+
+if(d.phone===phone){
+
+totalBookings++;
+
+if(d.status==="Completed"){
+completed++;
+totalSpent+=Number(d.finalPrice||0);
+}
+
+if(d.status==="Cancelled"){
+cancelled++;
+}
+
+historyHTML+=`<li>
+${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}
+</li>`;
+}
+});
+
+historyHTML+="</ul>";
+
+let loyalty="Bronze";
+if(totalSpent>5000) loyalty="Silver";
+if(totalSpent>15000) loyalty="Gold 👑";
+if(totalSpent>30000) loyalty="Platinum 💎";
+
+db.ref("customerNotes/"+phone).once("value",noteSnap=>{
+let tag="None";
+
+if(noteSnap.exists()){
+tag=noteSnap.val().tag;
+}
+
+document.getElementById("customerProfile").innerHTML=`
+<b>Phone:</b> ${phone}<br>
+<b>Total Bookings:</b> ${totalBookings}<br>
+<b>Completed:</b> ${completed}<br>
+<b>Cancelled:</b> ${cancelled}<br>
+<b>Total Spent:</b> ₹${totalSpent}<br>
+<b>Loyalty Level:</b> ${loyalty}<br>
+<b>Special Tag:</b> ${tag}<br><br>
+${historyHTML}
+`;
+
+});
+
+});
+
+                        }
+  
   /******** BARGAINER MEMORY ********/
 function markBargainer(phone){
 
