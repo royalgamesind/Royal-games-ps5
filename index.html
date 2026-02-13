@@ -534,7 +534,69 @@ timestamp:Date.now()
 alert("Customer saved as Bargainer. Next time you will get alert.");
 });
 
-                                             }
+  /******** WEBSITE ANALYTICS ********/
+
+function loadTodayAnalytics(){
+
+const todayKey = new Date().toISOString().split("T")[0];
+
+firebase.database().ref("dailyVisitors/"+todayKey)
+.once("value")
+.then(snapshot=>{
+
+let totalVisitors = 0;
+let bookedCount = 0;
+let notBookedCount = 0;
+let totalTimeSpent = 0;
+
+snapshot.forEach(child=>{
+    totalVisitors++;
+
+    const data = child.val();
+
+    if(data.booked){
+        bookedCount++;
+    } else {
+        notBookedCount++;
+    }
+
+    totalTimeSpent += data.totalTime || 0;
+});
+
+document.getElementById("totalVisitors").innerText = totalVisitors;
+document.getElementById("bookedVisitors").innerText = bookedCount;
+document.getElementById("notBookedVisitors").innerText = notBookedCount;
+document.getElementById("totalTimeSpent").innerText =
+Math.floor(totalTimeSpent/60000) + " Minutes";
+
+});
+}
+
+
+function loadTopVisitors(){
+
+const todayKey = new Date().toISOString().split("T")[0];
+
+firebase.database().ref("dailyVisitors/"+todayKey)
+.orderByChild("visits")
+.limitToLast(5)
+.once("value")
+.then(snapshot=>{
+
+let html = "<ol>";
+
+snapshot.forEach(child=>{
+    const data = child.val();
+    html += `<li>${child.key} - ${data.visits} visits</li>`;
+});
+
+html += "</ol>";
+
+document.getElementById("topVisitors").innerHTML = html;
+
+});
+}
+}
   
   
   
