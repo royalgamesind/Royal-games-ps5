@@ -621,8 +621,9 @@ document.getElementById("topVisitors").innerHTML = html;
     const data = await response.json();
 
     document.getElementById("aiResult").innerHTML =
-      "<pre>" + data.reply + "</pre>";
-
+  "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+    
+    
   } catch (error) {
     document.getElementById("aiResult").innerHTML =
       "Error connecting to Royal AI server.";
