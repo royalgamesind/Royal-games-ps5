@@ -427,6 +427,23 @@ html+="</ol>";
 document.getElementById("vipResult").innerHTML=html;
 });
   }
+  /******** BARGAINER MEMORY ********/
+function markBargainer(phone){
+
+if(!phone){
+alert("Phone number not found");
+return;
+}
+
+firebase.database().ref('customerNotes/'+phone).set({
+tag:"BARGAINER",
+timestamp:Date.now()
+}).then(()=>{
+alert("Customer saved as Bargainer. Next time you will get alert.");
+});
+
+                                             }
+  
   
   
 </script>
