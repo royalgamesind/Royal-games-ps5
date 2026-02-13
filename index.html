@@ -170,8 +170,18 @@ return `<tr>
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
 <td>${actionButton}</td>
-<td><button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
+
+<td>
+<button onclick="markBargainer('${d.phone}')"
+style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">
+⚠️ Bargainer
+</button>
+<br>
+<button class="delete" onclick="deleteBooking('${id}')">Delete</button>
+</td>
 </tr>`;
+  
+
 }
 
 /******** RECENT ********/
