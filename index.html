@@ -168,7 +168,12 @@ let actionButton = status==="Cancelled"
 
 return `<tr>
 <td>${id}</td>
-<td>${d.name||''}</td>
+<td>
+<a href="#" onclick="loadCustomerProfile('${d.phone}')"
+style="color:#38bdf8;text-decoration:none;font-weight:bold">
+${d.name||''}
+</a>
+</td>
 <td>${d.phone||''}</td>
 <td>${d.console||''}</td>
 <td>${d.startDate||''}</td>
