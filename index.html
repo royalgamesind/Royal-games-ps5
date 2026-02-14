@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Games Admin</title>
+<title>Royal Games Admin - God-Level AI</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -75,9 +75,7 @@ scroll-behavior:smooth;
 
 <!-- LOGIN BOX -->
 <div id="loginBox">
-<div style="background:#111827;padding:40px;border-radius:20px;
-width:320px;text-align:center;border:2px solid gold;
-box-shadow:0 0 25px rgba(255,215,0,.3)">
+<div style="background:#111827;padding:40px;border-radius:20px;width:320px;text-align:center;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.3)">
 <h2 style="color:gold">👑 Royal Admin</h2>
 <input type="password" id="adminPass" placeholder="Enter Password" style="width:100%">
 <button onclick="checkPassword()" style="width:100%">Login</button>
@@ -195,7 +193,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// LOGIN
+const SAFE_STATUSES = ["Active","Completed","Cancelled"];
+
+// ---------- LOGIN ----------
 function checkPassword(){
   if(document.getElementById("adminPass").value==="Royal@2026"){
     document.getElementById("loginBox").style.display="none";
@@ -213,7 +213,7 @@ function checkPassword(){
   }
 }
 
-// AUTO COMPLETE BOOKINGS
+// ---------- AUTO COMPLETE BOOKINGS ----------
 function autoCompleteBookings(){
   let today=new Date();
   db.ref("bookings").once("value",snap=>{
@@ -232,7 +232,7 @@ function autoCompleteBookings(){
   });
 }
 
-// TABLE ROW
+// ---------- ROW HTML ----------
 function rowHTML(id,d){
   let status=d.status||"Active";
   let actionButton = status==="Cancelled"
@@ -260,228 +260,62 @@ ${d.name||''}</a>
 </tr>`;
 }
 
-// LOAD RECENT BOOKINGS
-function loadRecent(){
-  db.ref("bookings").limitToLast(5).on("value",snap=>{
-    let html=`<tr>
+// ---------- LOAD FUNCTIONS ----------
+function loadRecent(){ db.ref("bookings").limitToLast(5).on("value",snap=>{ let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
-    snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
-    document.getElementById("recentTable").innerHTML=html;
-  });
-}
+<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`; snap.forEach(c=>{html+=rowHTML(c.key,c.val());}); document.getElementById("recentTable").innerHTML=html; }); }
 
-// SEARCH BOOKING
-function searchBooking(){
-  let val=document.getElementById("searchBox").value.toLowerCase();
-  db.ref("bookings").once("value",snap=>{
-    let html=`<tr>
+function searchBooking(){ let val=document.getElementById("searchBox").value.toLowerCase(); db.ref("bookings").once("value",snap=>{ let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
-<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
-    snap.forEach(c=>{
-      let d=c.val();
-      if(c.key.toLowerCase().includes(val)||(d.name||"").toLowerCase().includes(val)){
-        html+=rowHTML(c.key,d);
-      }
-    });
-    document.getElementById("searchTable").innerHTML=html;
-  });
-}
+<th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`; snap.forEach(c=>{ let d=c.val(); if(c.key.toLowerCase().includes(val)||(d.name||"").toLowerCase().includes(val)){ html+=rowHTML(c.key,d); } }); document.getElementById("searchTable").innerHTML=html; }); }
 
-// CANCEL / RESTORE / DELETE
+// ---------- CANCEL / RESTORE / DELETE ----------
 function cancelBooking(id){if(confirm("Cancel booking?")) db.ref("bookings/"+id).update({status:"Cancelled"});}
 function restoreBooking(id){db.ref("bookings/"+id).update({status:"Active"});}
 function deleteBooking(id){if(confirm("Permanently delete booking?")) db.ref("bookings/"+id).remove();}
 
-// 10 DAYS PERFORMANCE
+// ---------- 10 DAYS PERFORMANCE ----------
 function tenDays(){
-  let total=0,count=0;
-  let today=new Date();
+  let total=0,count=0; let today=new Date();
   db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val();
-      if(d.status!=="Completed") return;
-      let end=new Date(d.startDate);
-      end.setDate(end.getDate()+Number(d.days||0));
-      let diff=(today-end)/(1000*60*60*24);
-      if(diff<=10 && diff>=0){total+=Number(d.finalPrice||0);count++;}
-    });
+    snap.forEach(c=>{ let d=c.val(); if(d.status!=="Completed") return; let end=new Date(d.startDate); end.setDate(end.getDate()+Number(d.days||0)); let diff=(today-end)/(1000*60*60*24); if(diff<=10 && diff>=0){total+=Number(d.finalPrice||0);count++;} });
     document.getElementById("tenDaysData").innerHTML=`Total Completed: ${count}<br>Total Earnings: ₹${total}`;
   });
 }
 
-// POPULATE SELECTORS
+// ---------- POPULATE SELECTORS ----------
 function populateSelectors(){
-  for(let m=1;m<=12;m++){
-    document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`;
-    document.getElementById("reviewMonthSelect").innerHTML+=`<option value="${m}">${m}</option>`;
-  }
+  for(let m=1;m<=12;m++){ document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`; document.getElementById("reviewMonthSelect").innerHTML+=`<option value="${m}">${m}</option>`; }
   let currentYear=new Date().getFullYear();
-  for(let y=currentYear;y>=2023;y--){
-    document.getElementById("yearSelect").innerHTML+=`<option>${y}</option>`;
-    document.getElementById("yearOnlySelect").innerHTML+=`<option>${y}</option>`;
-    document.getElementById("reviewYearSelect").innerHTML+=`<option>${y}</option>`;
-    document.getElementById("deleteYearSelect").innerHTML+=`<option>${y}</option>`;
-  }
+  for(let y=currentYear;y>=2023;y--){ document.getElementById("yearSelect").innerHTML+=`<option>${y}</option>`; document.getElementById("yearOnlySelect").innerHTML+=`<option>${y}</option>`; document.getElementById("reviewYearSelect").innerHTML+=`<option>${y}</option>`; document.getElementById("deleteYearSelect").innerHTML+=`<option>${y}</option>`; }
 }
 
-// MONTHLY & YEARLY
-function calculateMonthly(){
-  let m=monthSelect.value;
-  let y=yearSelect.value;
-  let total=0,completed=0,cancelled=0;
-  db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val(); if(!d.startDate) return;
-      let bd=new Date(d.startDate);
-      if((bd.getMonth()+1)==m && bd.getFullYear()==y){
-        if(d.status==="Completed") {total+=Number(d.finalPrice||0);completed++;}
-        if(d.status==="Cancelled") cancelled++;
-      }
-    });
-    monthlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
-  });
-}
-function calculateYearly(){
-  let y=yearOnlySelect.value; let total=0,completed=0,cancelled=0;
-  db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val(); if(!d.startDate) return;
-      let bd=new Date(d.startDate);
-      if(bd.getFullYear()==y){
-        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;}
-        if(d.status==="Cancelled") cancelled++;
-      }
-    });
-    yearlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
-  });
-}
+// ---------- MONTHLY & YEARLY ----------
+function calculateMonthly(){ let m=monthSelect.value; let y=yearSelect.value; let total=0,completed=0,cancelled=0; db.ref("bookings").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(!d.startDate) return; let bd=new Date(d.startDate); if((bd.getMonth()+1)==m && bd.getFullYear()==y){ if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;} if(d.status==="Cancelled") cancelled++; } }); monthlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`; }); }
 
-// DELETE REVIEWS / BOOKINGS
-function deleteReviewsByMonth(){
-  let m=document.getElementById("reviewMonthSelect").value;
-  let y=document.getElementById("reviewYearSelect").value;
-  if(!confirm("Are you sure?")) return;
-  let deletedCount=0;
-  db.ref("reviews").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val(); if(!d.timestamp) return;
-      let reviewDate=new Date(d.timestamp);
-      if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){
-        db.ref("reviews/"+c.key).remove();
-        deletedCount++;
-      }
-    });
-    document.getElementById("deleteReviewResult").innerHTML=`Deleted Reviews: ${deletedCount}`;
-  });
-}
-function deleteBookingsByYear(){
-  let y=document.getElementById("deleteYearSelect").value;
-  if(!confirm("Delete ALL bookings for selected year?")) return;
-  let deletedCount=0;
-  db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val(); if(!d.startDate) return;
-      let bookingDate=new Date(d.startDate);
-      if(bookingDate.getFullYear()==y){db.ref("bookings/"+c.key).remove();deletedCount++;}
-    });
-    document.getElementById("deleteYearResult").innerHTML=`Deleted Bookings: ${deletedCount}`;
-  });
-}
+function calculateYearly(){ let y=yearOnlySelect.value; let total=0,completed=0,cancelled=0; db.ref("bookings").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(!d.startDate) return; let bd=new Date(d.startDate); if(bd.getFullYear()==y){ if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;} if(d.status==="Cancelled") cancelled++; } }); yearlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`; }); }
 
-// VIP CUSTOMERS
-function loadVIP(){
-  let customerCount={};
-  db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val(); if(!d.phone) return;
-      let key=d.phone;
-      if(!customerCount[key]) customerCount[key]={name:d.name||"Unknown",phone:d.phone,count:0};
-      customerCount[key].count++;
-    });
-    let arr=Object.values(customerCount);
-    arr.sort((a,b)=>b.count-a.count);
-    let top3=arr.slice(0,3);
-    let html="<ol>";
-    top3.forEach(c=>{html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`});
-    html+="</ol>";
-    document.getElementById("vipResult").innerHTML=html;
-  });
-}
+// ---------- DELETE ----------
+function deleteReviewsByMonth(){ let m=document.getElementById("reviewMonthSelect").value; let y=document.getElementById("reviewYearSelect").value; if(!confirm("Are you sure?")) return; let deletedCount=0; db.ref("reviews").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(!d.timestamp) return; let reviewDate=new Date(d.timestamp); if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){ db.ref("reviews/"+c.key).remove(); deletedCount++; } }); document.getElementById("deleteReviewResult").innerHTML=`Deleted Reviews: ${deletedCount}`; }); }
 
-// CUSTOMER PROFILE
-function loadCustomerProfile(phone){
-  if(!phone){alert("Phone not found");return;}
-  let totalSpent=0,totalBookings=0,completed=0,cancelled=0;
-  let historyHTML="<h3>Booking History</h3><ul>";
-  db.ref("bookings").once("value",snap=>{
-    snap.forEach(c=>{
-      let d=c.val();
-      if(d.phone===phone){
-        totalBookings++;
-        if(d.status==="Completed"){completed++;totalSpent+=Number(d.finalPrice||0);}
-        if(d.status==="Cancelled") cancelled++;
-        historyHTML+=`<li>${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}</li>`;
-      }
-    });
-    historyHTML+="</ul>";
-    let loyalty="Bronze";if(totalSpent>5000) loyalty="Silver";if(totalSpent>15000) loyalty="Gold 👑";if(totalSpent>30000) loyalty="Platinum 💎";
-    db.ref("customerNotes/"+phone).once("value",noteSnap=>{
-      let tag="None";
-      if(noteSnap.exists()){tag=noteSnap.val().tag;}
-      document.getElementById("customerProfile").innerHTML=`
-<b>Phone:</b> ${phone}<br>
-<b>Total Bookings:</b> ${totalBookings}<br>
-<b>Completed:</b> ${completed}<br>
-<b>Cancelled:</b> ${cancelled}<br>
-<b>Total Spent:</b> ₹${totalSpent}<br>
-<b>Loyalty Level:</b> ${loyalty}<br>
-<b>Special Tag:</b> ${tag}<br><br>
-${historyHTML}`;
-    });
-  });
-}
+function deleteBookingsByYear(){ let y=document.getElementById("deleteYearSelect").value; if(!confirm("Delete ALL bookings for selected year?")) return; let deletedCount=0; db.ref("bookings").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(!d.startDate) return; let bookingDate=new Date(d.startDate); if(bookingDate.getFullYear()==y){ db.ref("bookings/"+c.key).remove(); deletedCount++; } }); document.getElementById("deleteYearResult").innerHTML=`Deleted Bookings: ${deletedCount}`; }); }
 
-// BARGAINER
-function markBargainer(phone){
-  if(!phone){alert("Phone number not found");return;}
-  firebase.database().ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()})
-  .then(()=>{alert("Customer saved as Bargainer. Next time you will get alert.");});
-}
+// ---------- VIP ----------
+function loadVIP(){ let customerCount={}; db.ref("bookings").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(!d.phone) return; let key=d.phone; if(!customerCount[key]) customerCount[key]={name:d.name||"Unknown",phone:d.phone,count:0}; customerCount[key].count++; }); let arr=Object.values(customerCount); arr.sort((a,b)=>b.count-a.count); let top3=arr.slice(0,3); let html="<ol>"; top3.forEach(c=>{html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`}); html+="</ol>"; document.getElementById("vipResult").innerHTML=html; }); }
 
-// TODAY ANALYTICS
-function loadTodayAnalytics(){
-  const todayKey=new Date().toISOString().split("T")[0];
-  firebase.database().ref("dailyVisitors/"+todayKey).once("value").then(snapshot=>{
-    let totalVisitors=0,bookedCount=0,notBookedCount=0,totalTimeSpent=0;
-    snapshot.forEach(child=>{
-      totalVisitors++;
-      const data=child.val();
-      if(data.booked) bookedCount++; else notBookedCount++;
-      totalTimeSpent+=data.totalTime||0;
-    });
-    document.getElementById("totalVisitors").innerText=totalVisitors;
-    document.getElementById("bookedVisitors").innerText=bookedCount;
-    document.getElementById("notBookedVisitors").innerText=notBookedCount;
-    document.getElementById("totalTimeSpent").innerText=Math.floor(totalTimeSpent/60000)+" Minutes";
-  });
-}
-function loadTopVisitors(){
-  const todayKey=new Date().toISOString().split("T")[0];
-  firebase.database().ref("dailyVisitors/"+todayKey).orderByChild("visits").limitToLast(5).once("value").then(snapshot=>{
-    let html="<ol>";
-    snapshot.forEach(child=>{
-      const data=child.val();
-      html+=`<li>${child.key} - ${data.visits} visits</li>`;
-    });
-    html+="</ol>";
-    document.getElementById("topVisitors").innerHTML=html;
-  });
-}
+// ---------- CUSTOMER PROFILE ----------
+function loadCustomerProfile(phone){ if(!phone){alert("Phone not found");return;} let totalSpent=0,totalBookings=0,completed=0,cancelled=0; let historyHTML="<h3>Booking History</h3><ul>"; db.ref("bookings").once("value",snap=>{ snap.forEach(c=>{ let d=c.val(); if(d.phone===phone){ totalBookings++; if(d.status==="Completed"){completed++;totalSpent+=Number(d.finalPrice||0);} if(d.status==="Cancelled") cancelled++; historyHTML+=`<li>${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}</li>`; } }); historyHTML+="</ul>"; let loyalty="Bronze";if(totalSpent>5000) loyalty="Silver";if(totalSpent>15000) loyalty="Gold 👑";if(totalSpent>30000) loyalty="Platinum 💎"; db.ref("customerNotes/"+phone).once("value",noteSnap=>{ let tag="None"; if(noteSnap.exists()){tag=noteSnap.val().tag;} document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`; }); }
 
-// AI CHAT FUNCTIONS
+// ---------- BARGAINER ----------
+function markBargainer(phone){ if(!phone){alert("Phone number not found");return;} firebase.database().ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()}).then(()=>{alert("Customer saved as Bargainer. Next time you will get alert.");}); }
+
+// ---------- TODAY ANALYTICS ----------
+function loadTodayAnalytics(){ const todayKey=new Date().toISOString().split("T")[0]; firebase.database().ref("dailyVisitors/"+todayKey).once("value").then(snapshot=>{ let totalVisitors=0,bookedCount=0,notBookedCount=0,totalTimeSpent=0; snapshot.forEach(child=>{ totalVisitors++; const data=child.val(); if(data.booked) bookedCount++; else notBookedCount++; totalTimeSpent+=data.totalTime||0; }); document.getElementById("totalVisitors").innerText=totalVisitors; document.getElementById("bookedVisitors").innerText=bookedCount; document.getElementById("notBookedVisitors").innerText=notBookedCount; document.getElementById("totalTimeSpent").innerText=Math.floor(totalTimeSpent/60000)+" Minutes"; }); }
+function loadTopVisitors(){ const todayKey=new Date().toISOString().split("T")[0]; firebase.database().ref("dailyVisitors/"+todayKey).orderByChild("visits").limitToLast(5).once("value").then(snapshot=>{ let html="<ol>"; snapshot.forEach(child=>{ const data=child.val(); html+=`<li>${child.key} - ${data.visits} visits</li>`; }); html+="</ol>"; document.getElementById("topVisitors").innerHTML=html; }); }
+
+// ---------- AI CHAT ----------
 async function sendAI(){
   const input=document.getElementById("aiInput");
   const chatBox=document.getElementById("aiChat");
@@ -489,7 +323,7 @@ async function sendAI(){
   addMessage(question,"user"); input.value="";
   
   const thinking=document.createElement("div");
-  thinking.className="bot msg"; thinking.textContent="AI is typing...";
+  thinking.className="bot msg"; thinking.textContent="AI is thinking...";
   chatBox.appendChild(thinking); chatBox.scrollTop=chatBox.scrollHeight;
 
   buildBusinessReport().then(report=>{
@@ -497,23 +331,16 @@ async function sendAI(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        message: `You are a business analyst for a PlayStation & Xbox rental shop.\nOwner Question:\n${question}\nReal Shop Data:\n${report}\nGive clear advice and suggestions to grow bookings and profit.`
+        message: `You are a God-level business manager for a PlayStation & Xbox rental shop.\nOwner Question:\n${question}\nReal Shop Data:\n${report}\nGive actionable suggestions and commands.`
       })
     }).then(res=>res.json())
-    .then(data=>{
+    .then(async data=>{
       thinking.remove();
       if(data.reply){
-    // HANDLE COMMANDS BEFORE DISPLAYING
-    handleAICommand(data.reply).then(finalResponse=>{
-        addMessage(finalResponse,"bot");
-    });
-}else{
-    addMessage("AI did not respond properly","bot");
-}
-
-      
-      console.log(err);
-    });
+        const finalResp = await handleAICommand(data.reply);
+        addMessage(finalResp,"bot");
+      } else { addMessage("AI did not respond properly","bot"); }
+    }).catch(err=>{thinking.remove(); addMessage("AI Error","bot"); console.error(err);});
   });
 }
 
@@ -521,7 +348,7 @@ function addMessage(text,sender){
   const chat=document.getElementById("aiChat");
   const msg=document.createElement("div");
   msg.classList.add("msg");
-  if(sender==="user"){msg.classList.add("user");}else{msg.classList.add("bot");}
+  msg.classList.add(sender==="user"?"user":"bot");
   msg.textContent=text; chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
 }
 
@@ -539,16 +366,10 @@ async function buildBusinessReport(){
   });
   let totalVisitors=0,bookedVisitors=0;
   visitorSnap.forEach(day=>{day.forEach(v=>{totalVisitors++; if(v.val().booked) bookedVisitors++;});});
-  return `You are my personal business manager for a PlayStation 5 & Xbox rental shop.\n===== BUSINESS STATS =====\nTotal Bookings: ${totalBookings}\nRevenue: ₹${totalRevenue}\nCompleted: ${completed}\nCancelled: ${cancelled}\nActive: ${active}\nVisitors: ${totalVisitors}\nConverted Customers: ${bookedVisitors}\n===== CUSTOMER DATA =====\n${report}\nGive practical advice to grow my rental business and handle customers.`;
+  return `===== BUSINESS STATS =====\nTotal Bookings: ${totalBookings}\nRevenue: ₹${totalRevenue}\nCompleted: ${completed}\nCancelled: ${cancelled}\nActive: ${active}\nVisitors: ${totalVisitors}\nConverted Customers: ${bookedVisitors}\n===== CUSTOMER DATA =====\n${report}`;
 }
 
-window.addEventListener("load",function(){
-  document.getElementById("aiInput").addEventListener("keydown",function(e){
-    if(e.key==="Enter" && !e.shiftKey){e.preventDefault(); sendAI();}
-  });
-});
-  const SAFE_STATUSES = ["Active","Completed","Cancelled"];
-
+// ---------- HANDLE AI COMMANDS ----------
 async function handleAICommand(replyText){
     const dbRef = db.ref();
 
@@ -592,9 +413,15 @@ async function handleAICommand(replyText){
         return `Visitors who didn’t book today: ${nonBookers.join(", ") || "None"}`;
     }
 
-    // 5. If no command, just reply as normal
     return replyText;
 }
+
+
+
+
+
+  
+                  
   
 </script>
 </body>
