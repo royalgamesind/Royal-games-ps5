@@ -628,49 +628,47 @@ document.getElementById("topVisitors").innerHTML = html;
 
 });
 }
-async function sendAI(){
+  async function sendAI() {
 
-let input=document.getElementById("aiInput");
-let question=input.value.trim();
+  let input = document.getElementById("aiInput");
+  let message = input.value.trim();
+  if (!message) return;
 
-if(!question) return;
+  addMessage(message, "user");
+  input.value = "";
 
-addMessage(question,"user");
-input.value="";
+  // thinking message
+  let thinkingDiv = document.createElement("div");
+  thinkingDiv.className = "msg bot";
+  thinkingDiv.id = "thinking";
+  thinkingDiv.innerText = "Thinking...";
+  document.getElementById("chatBox").appendChild(thinkingDiv);
 
-addMessage("Thinking...","ai");
+  try {
 
-let report = await buildBusinessReport();
+    const res = await fetch("https://royal-ai-games.vercel.app/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: message })
+    });
 
-let prompt=`
-You are a manager of a PlayStation rental shop.
+    const data = await res.json();
 
-Real shop data:
-${report}
+    // remove thinking
+    document.getElementById("thinking")?.remove();
 
-Owner question:
-${question}
+    // ⭐ MOST IMPORTANT LINE
+    addMessage(data.reply || "No reply from AI", "bot");
 
-Answer in simple language and give practical advice.
-`;
+  } catch (err) {
+    document.getElementById("thinking")?.remove();
+    addMessage("Server connection error", "bot");
+  }
+  }
+  
 
-try{
-
-const res=await fetch("https://royal-ai-games.vercel.app/api/chat",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({message:prompt})
-});
-
-const data=await res.json();
-
-document.getElementById("chatBox").lastChild.remove();
-addMessage(data.reply || "No response","ai");
-
-}catch{
-document.getElementById("chatBox").lastChild.innerText="AI server offline.";
-}
-}
   
   async function testAI() {
 
