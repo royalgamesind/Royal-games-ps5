@@ -1006,6 +1006,25 @@ Give practical advice to grow my rental business and handle customers.
 `;
   }
   
+  function addMessage(text, sender){
+
+  const chat = document.getElementById("aiChat");
+
+  const msg = document.createElement("div");
+  msg.classList.add("msg");
+
+  if(sender === "user"){
+    msg.classList.add("user");
+  }else{
+    msg.classList.add("bot");
+  }
+
+  msg.textContent = text;
+  chat.appendChild(msg);
+
+  // auto scroll bottom
+  chat.scrollTop = chat.scrollHeight;
+  }
   
   
   
