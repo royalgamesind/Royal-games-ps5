@@ -790,33 +790,72 @@ box.scrollTop=box.scrollHeight;
   }
   async function buildBusinessReport(){
 
-  const snap = await db.ref("bookings").once("value");
+const bookingSnap = await db.ref("bookings").once("value");
+const noteSnap = await db.ref("customerNotes").once("value");
+const visitorSnap = await db.ref("dailyVisitors").once("value");
 
-  let totalBookings = 0;
-  let totalRevenue = 0;
-  let active = 0;
-  let completed = 0;
-  let cancelled = 0;
+let report = "";
+let totalBookings=0,totalRevenue=0,completed=0,cancelled=0,active=0;
 
-  snap.forEach(c=>{
-    const d = c.val();
-    totalBookings++;
+let bargainCustomers={};
+noteSnap.forEach(n=>{
+const d=n.val();
+if(d.tag==="BARGAINER"){
+bargainCustomers[n.key]=true;
+}
+});
 
-    totalRevenue += Number(d.finalPrice || 0);
+bookingSnap.forEach(c=>{
+const d=c.val();
+totalBookings++;
+totalRevenue+=Number(d.finalPrice||0);
 
-    if(d.status==="Active") active++;
-    if(d.status==="Completed") completed++;
-    if(d.status==="Cancelled") cancelled++;
-  });
+if(d.status==="Completed") completed++;
+if(d.status==="Cancelled") cancelled++;
+if(d.status==="Active") active++;
 
-  return `
-Total bookings: ${totalBookings}
-Total revenue: ₹${totalRevenue}
-Active bookings: ${active}
-Completed bookings: ${completed}
-Cancelled bookings: ${cancelled}
+let bargain = bargainCustomers[d.phone]?"YES":"NO";
+
+report+=`
+Customer: ${d.name}
+Phone: ${d.phone}
+Console: ${d.console}
+Paid: ₹${d.finalPrice}
+Status: ${d.status}
+Bargainer: ${bargain}
+---------------------
+`;
+});
+
+let totalVisitors=0,bookedVisitors=0;
+visitorSnap.forEach(day=>{
+day.forEach(v=>{
+totalVisitors++;
+if(v.val().booked) bookedVisitors++;
+});
+});
+
+return `
+You are my personal business manager for a PlayStation 5 & Xbox rental shop.
+
+===== BUSINESS STATS =====
+Total Bookings: ${totalBookings}
+Revenue: ₹${totalRevenue}
+Completed: ${completed}
+Cancelled: ${cancelled}
+Active: ${active}
+
+Visitors: ${totalVisitors}
+Converted Customers: ${bookedVisitors}
+
+===== CUSTOMER DATA =====
+${report}
+
+Give practical advice to grow my rental business and handle customers.
 `;
   }
+  
+  
   
   
   
