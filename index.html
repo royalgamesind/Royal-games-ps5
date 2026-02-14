@@ -770,6 +770,8 @@ const input = document.getElementById("aiInput");
 const chatBox = document.getElementById("chatBox");
 
 let question = input.value.trim();
+  addMessage(question,"user");
+  
 if(!question) return;
 
 // user message
