@@ -474,12 +474,12 @@ function loadTopVisitors(){
 }
 
 // ---------- AI CHAT ----------
-  async function sendAI(){
+  async function sendAI() {
   const input = document.getElementById("aiInput");
   const chatBox = document.getElementById("aiChat");
   const question = input.value.trim();
   if(!question) return;
-  
+
   addMessage(question, "user");
   input.value = "";
 
@@ -490,33 +490,42 @@ function loadTopVisitors(){
   chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    const report = await buildBusinessReport(); // short summary
-    const prompt = `
-You are a God-level AI assistant. Two modes:
-1. Business mode: Use shop data below to answer business questions.
-2. General mode: Answer normally if question is general.
+    // Detect if question is business-related
+    const businessKeywords = ["booking","vip","customer","revenue","bargainer","earnings","completed","cancelled"];
+    const isBusiness = businessKeywords.some(k => question.toLowerCase().includes(k));
+
+    let responseText = "";
+
+    if(isBusiness){
+      const report = await buildBusinessReport();
+      const prompt = `
+You are a God-level AI assistant for the shop. Answer based on shop data ONLY.
 
 Owner Question: ${question}
 
 Shop Summary: 
 ${report}
 `;
+      const data = await fetch("https://royal-ai-games.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: prompt })
+      }).then(r=>r.json());
 
-    const response = await fetch("https://royal-ai-games.vercel.app/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt })
-    });
-
-    const data = await response.json();
-    thinking.remove();
-
-    if(data.reply){
-      const finalResp = await handleAICommand(data.reply); // executes commands if any
-      addMessage(finalResp, "bot");
+      responseText = data.reply ? await handleAICommand(data.reply) : "AI did not understand. Try again.";
     } else {
-      addMessage("AI did not understand. Try again.", "bot");
+      // GENERAL question → use the same API in internet mode
+      const data = await fetch("https://royal-ai-games.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: question })
+      }).then(r=>r.json());
+
+      responseText = data.reply || "I could not find an answer online.";
     }
+
+    thinking.remove();
+    addMessage(responseText, "bot");
 
   } catch(err){
     thinking.remove();
@@ -524,6 +533,8 @@ ${report}
     console.error(err);
   }
   }
+  
+  
 
 
 function addMessage(text,sender){
