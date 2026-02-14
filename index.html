@@ -859,9 +859,21 @@ Analyze my business and tell:
     document.getElementById("aiResult").innerText = "AI connection error";
   }
   }
-  
   window.addEventListener("load", function(){
 
+const aiBox=document.getElementById("aiInput");
+
+aiBox.addEventListener("keydown",function(e){
+if(e.key==="Enter" && !e.shiftKey){
+e.preventDefault();
+sendAI();
+}
+});
+
+});
+  
+  
+  
 let aiBox = document.getElementById("aiInput");
 
 if(aiBox){
