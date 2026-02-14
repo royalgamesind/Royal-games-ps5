@@ -196,22 +196,24 @@ const db = firebase.database();
 const SAFE_STATUSES = ["Active","Completed","Cancelled"];
 
 // ---------- LOGIN ----------
-function checkPassword(){
-  if(document.getElementById("adminPass").value==="Royal@2026"){
+  function checkPassword(){
+  const entered = document.getElementById("adminPass").value.trim();
+  if(entered === "Royal@2026"){
     document.getElementById("loginBox").style.display="none";
+
+    // Initialize all dashboard functions
     autoCompleteBookings();
     loadRecent();
     tenDays();
     populateSelectors();
     loadTodayAnalytics();
     loadTopVisitors();
-    document.getElementById("aiInput").addEventListener("keypress", function(e){
-      if(e.key==="Enter") sendAI();
-    });
   } else {
     document.getElementById("loginError").innerText="Wrong Password";
   }
-}
+  }
+  
+
 
 // ---------- AUTO COMPLETE BOOKINGS ----------
 function autoCompleteBookings(){
