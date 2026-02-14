@@ -656,6 +656,16 @@ style="flex:1;background:#1f2937;color:white">
 </div>
 </div>
   
+  function addMessage(text,type){
+
+let div=document.createElement("div");
+div.className="msg "+type;
+div.innerText=text;
+
+let box=document.getElementById("chatBox");
+box.appendChild(div);
+box.scrollTop=box.scrollHeight;
+  }
   
   
   
