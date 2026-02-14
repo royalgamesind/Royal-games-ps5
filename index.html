@@ -173,6 +173,12 @@ tenDays();
 populateSelectors();
   loadTodayAnalytics();
 loadTopVisitors();
+  document.getElementById("aiInput").addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+sendAI();
+}
+});
+  
   
 }else{
 document.getElementById("loginError").innerText="Wrong Password";
