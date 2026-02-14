@@ -502,9 +502,16 @@ async function sendAI(){
     }).then(res=>res.json())
     .then(data=>{
       thinking.remove();
-      if(data.reply){addMessage(data.reply,"bot");}else{addMessage("AI did not respond properly","bot");}
-    }).catch(err=>{
-      thinking.textContent="Server connection error";
+      if(data.reply){
+    // HANDLE COMMANDS BEFORE DISPLAYING
+    handleAICommand(data.reply).then(finalResponse=>{
+        addMessage(finalResponse,"bot");
+    });
+}else{
+    addMessage("AI did not respond properly","bot");
+}
+
+      
       console.log(err);
     });
   });
@@ -540,6 +547,55 @@ window.addEventListener("load",function(){
     if(e.key==="Enter" && !e.shiftKey){e.preventDefault(); sendAI();}
   });
 });
+  const SAFE_STATUSES = ["Active","Completed","Cancelled"];
+
+async function handleAICommand(replyText){
+    const dbRef = db.ref();
+
+    // 1. Change booking status
+    let match = replyText.match(/Change booking (\w+) status to (\w+)/i);
+    if(match){
+        const [_, bookingID, status] = match;
+        const newStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        if(SAFE_STATUSES.includes(newStatus)){
+            await dbRef.child(`bookings/${bookingID}`).update({status:newStatus});
+            return `✅ Booking ${bookingID} updated to ${newStatus}`;
+        }
+        return `⚠️ Invalid status: ${status}`;
+    }
+
+    // 2. Delete review
+    match = replyText.match(/Delete review (\w+)/i);
+    if(match){
+        const reviewID = match[1];
+        await dbRef.child(`reviews/${reviewID}`).remove();
+        return `✅ Review ${reviewID} deleted`;
+    }
+
+    // 3. Tag Bargainer
+    match = replyText.match(/Tag customer (\w+) as BARGAINER/i);
+    if(match){
+        const phone = match[1];
+        await dbRef.child(`customerNotes/${phone}`).set({tag:"BARGAINER", timestamp:Date.now()});
+        return `✅ Customer ${phone} tagged as BARGAINER`;
+    }
+
+    // 4. Track visitors who didn’t book
+    if(/show me visitors who didn’t book/i.test(replyText)){
+        const todayKey = new Date().toISOString().split("T")[0];
+        const snap = await dbRef.child(`dailyVisitors/${todayKey}`).once("value");
+        let nonBookers = [];
+        snap.forEach(child=>{
+            const data = child.val();
+            if(!data.booked) nonBookers.push(child.key);
+        });
+        return `Visitors who didn’t book today: ${nonBookers.join(", ") || "None"}`;
+    }
+
+    // 5. If no command, just reply as normal
+    return replyText;
+}
+  
 </script>
 </body>
 </html>
