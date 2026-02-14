@@ -822,12 +822,13 @@ Give clear advice and suggestions to grow bookings and profit.
 .then(data=>{
 
 thinking.remove();
-
 if(data.reply){
-addMessage(data.reply,"ai");
+  addMessage(data.reply,"bot");  // use "bot" instead of "ai"
 }else{
-addMessage("AI did not respond properly","ai");
+  addMessage("AI did not respond properly","bot");
 }
+  
+
 
 })
 .catch(err=>{
