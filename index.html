@@ -476,63 +476,34 @@ function loadTopVisitors(){
 // ---------- AI CHAT ----------
   async function sendAI() {
   const input = document.getElementById("aiInput");
-  const chatBox = document.getElementById("aiChat");
   const question = input.value.trim();
-  if(!question) return;
+  if (!question) return;
 
   addMessage(question, "user");
   input.value = "";
 
+  const chatBox = document.getElementById("aiChat");
   const thinking = document.createElement("div");
   thinking.className = "bot msg";
   thinking.textContent = "AI is thinking...";
   chatBox.appendChild(thinking);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  try {
-    // Detect if question is business-related
-    const businessKeywords = ["booking","vip","customer","revenue","bargainer","earnings","completed","cancelled"];
-    const isBusiness = businessKeywords.some(k => question.toLowerCase().includes(k));
+  // ONE API CALL for everything
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: question,
+      isAdmin: true   // only admin can execute commands
+    })
+  }).then(r => r.json());
 
-    let responseText = "";
-
-    if(isBusiness){
-      const report = await buildBusinessReport();
-      const prompt = `
-You are a God-level AI assistant for the shop. Answer based on shop data ONLY.
-
-Owner Question: ${question}
-
-Shop Summary: 
-${report}
-`;
-      const data = await fetch("https://royal-ai-games.vercel.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: prompt })
-      }).then(r=>r.json());
-
-      responseText = data.reply ? await handleAICommand(data.reply) : "AI did not understand. Try again.";
-    } else {
-      // GENERAL question → use the same API in internet mode
-      const data = await fetch("https://royal-ai-games.vercel.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question })
-      }).then(r=>r.json());
-
-      responseText = data.reply || "I could not find an answer online.";
-    }
-
-    thinking.remove();
-    addMessage(responseText, "bot");
-
-  } catch(err){
-    thinking.remove();
-    addMessage("AI Error. Check console.", "bot");
-    console.error(err);
+  thinking.remove();
+  addMessage(response.reply, "bot");
   }
-  }
+  
+  
   
   
 
