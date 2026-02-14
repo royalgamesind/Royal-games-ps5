@@ -736,11 +736,21 @@ addMessage(question,"user");
 input.value="";
 
 // thinking message
-const thinking = document.createElement("div");
-thinking.className="ai";
-thinking.innerText="Thinking...";
+  const thinking=document.createElement("div");
+thinking.className="msgRow";
+
+thinking.innerHTML=`
+<div class="avatar aiAvatar">AI</div>
+<div class="bubble aiBubble typing">
+  <div class="dot"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+</div>
+`;
+
 chatBox.appendChild(thinking);
-chatBox.scrollTop = chatBox.scrollHeight;
+chatBox.scrollTop=chatBox.scrollHeight;
+  
 
 // IMPORTANT: wait for firebase report
 buildBusinessReport().then(report=>{
