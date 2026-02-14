@@ -764,81 +764,63 @@ document.getElementById("topVisitors").innerHTML = html;
 
 });
 }
-  
-function sendAI(){
+  function sendAI(){
+  const input = document.getElementById("aiInput");
+  const chatBox = document.getElementById("aiChat"); // <-- fixed
 
-const input = document.getElementById("aiInput");
-const chatBox = document.getElementById("chatBox");
+  let question = input.value.trim();
+  if(!question) return;
 
-let question = input.value.trim();
+  // user message
   addMessage(question,"user");
-  
-if(!question) return;
+  input.value="";
 
-// user message
-addMessage(question,"user");
-input.value="";
-
-// thinking message
+  // thinking message
   const thinking=document.createElement("div");
-thinking.className="msgRow";
+  thinking.className="msgRow";
+  thinking.innerHTML=`
+    <div class="avatar aiAvatar">AI</div>
+    <div class="bubble aiBubble typing">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  `;
+  chatBox.appendChild(thinking);
+  chatBox.scrollTop=chatBox.scrollHeight;
 
-thinking.innerHTML=`
-<div class="avatar aiAvatar">AI</div>
-<div class="bubble aiBubble typing">
-  <div class="dot"></div>
-  <div class="dot"></div>
-  <div class="dot"></div>
-</div>
-`;
-
-chatBox.appendChild(thinking);
-chatBox.scrollTop=chatBox.scrollHeight;
-  
-
-// IMPORTANT: wait for firebase report
-buildBusinessReport().then(report=>{
-
-fetch("https://royal-ai-games.vercel.app/api/chat",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-message: `
+  // AI fetch
+  buildBusinessReport().then(report=>{
+    fetch("https://royal-ai-games.vercel.app/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        message: `
 You are a business analyst for a PlayStation & Xbox rental shop.
-
 Owner Question:
 ${question}
-
 Real Shop Data:
 ${report}
-
-Give clear advice and suggestions to grow bookings and profit.
-`
-})
-})
-.then(res=>res.json())
-.then(data=>{
-
-thinking.remove();
-if(data.reply){
-  addMessage(data.reply,"bot");  // use "bot" instead of "ai"
-}else{
-  addMessage("AI did not respond properly","bot");
-}
+Give clear advice and suggestions to grow bookings and profit.`
+      })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+      thinking.remove();
+      if(data.reply){
+        addMessage(data.reply,"bot"); 
+      }else{
+        addMessage("AI did not respond properly","bot");
+      }
+    })
+    .catch(err=>{
+      thinking.innerText="Server connection error";
+      console.log(err);
+    });
+  });
+  }
   
 
-
-})
-.catch(err=>{
-thinking.innerText="Server connection error";
-console.log(err);
-});
-
-});
-
-}
 
   
   
