@@ -474,34 +474,41 @@ function loadTopVisitors(){
 }
 
 // ---------- AI CHAT ----------
-  async function sendAI() {
+  async function sendAI(){
   const input = document.getElementById("aiInput");
   const question = input.value.trim();
-  if (!question) return;
+  if(!question) return;
 
-  addMessage(question, "user");
-  input.value = "";
+  addMessage(question,"user");
+  input.value="";
 
   const chatBox = document.getElementById("aiChat");
   const thinking = document.createElement("div");
-  thinking.className = "bot msg";
-  thinking.textContent = "AI is thinking...";
+  thinking.className="bot msg";
+  thinking.textContent="AI is thinking...";
   chatBox.appendChild(thinking);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  // ONE API CALL for everything
-  const response = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: question,
-      isAdmin: true   // only admin can execute commands
-    })
-  }).then(r => r.json());
+  try{
+    const res = await fetch("/api/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ query: question, isAdmin: true })
+    });
+    const data = await res.json();
+    thinking.remove();
 
-  thinking.remove();
-  addMessage(response.reply, "bot");
+    // Check for commands
+    const finalReply = await handleAICommand(data.reply);
+    addMessage(finalReply,"bot");
+  } catch(err){
+    thinking.remove();
+    addMessage("Error contacting AI. Check console.","bot");
+    console.error(err);
   }
+  }
+  
+  
   
   
   
