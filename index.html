@@ -628,45 +628,41 @@ document.getElementById("topVisitors").innerHTML = html;
 
 });
 }
-  async function sendAI() {
+  async function sendAI(){
 
-  let input = document.getElementById("aiInput");
-  let message = input.value.trim();
-  if (!message) return;
+let input=document.getElementById("aiInput");
+let question=input.value.trim();
+if(!question) return;
 
-  addMessage(message, "user");
-  input.value = "";
+addMessage(question,"user");
+input.value="";
 
-  // thinking message
-  let thinkingDiv = document.createElement("div");
-  thinkingDiv.className = "msg bot";
-  thinkingDiv.id = "thinking";
-  thinkingDiv.innerText = "Thinking...";
-  document.getElementById("chatBox").appendChild(thinkingDiv);
+addMessage("Thinking...","ai");
 
-  try {
+let report = await buildBusinessReport();
 
-    const res = await fetch("https://royal-ai-games.vercel.app/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: message })
-    });
+try{
 
-    const data = await res.json();
+const res=await fetch("https://royal-ai-games.vercel.app/api/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+question: question,
+report: report
+})
+});
 
-    // remove thinking
-    document.getElementById("thinking")?.remove();
+const data=await res.json();
 
-    // ⭐ MOST IMPORTANT LINE
-    addMessage(data.reply || "No reply from AI", "bot");
+document.getElementById("chatBox").lastChild.remove();
+addMessage(data.reply || "No response","ai");
 
-  } catch (err) {
-    document.getElementById("thinking")?.remove();
-    addMessage("Server connection error", "bot");
+}catch{
+document.getElementById("chatBox").lastChild.innerText="AI server offline.";
+}
   }
-  }
+  
+  
   
 
   
