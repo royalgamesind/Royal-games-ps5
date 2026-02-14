@@ -500,10 +500,14 @@ async function handleAICommand(replyText){
 
   return replyText;
 }
-
-// ENTER KEY SEND AI
-window.addEventListener("load", function(){
-  document.getElementById("aiInput").addEventListener("keydown", func
+  // Make Enter key send AI message
+document.getElementById("aiInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter" && !e.shiftKey){ // Enter without Shift
+        e.preventDefault(); // prevent new line
+        sendAI();           // send the message
+    }
+});
+  
 
 
 
