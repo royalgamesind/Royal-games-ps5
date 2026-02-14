@@ -25,9 +25,8 @@ th{color:#facc15}
 #loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
 display:flex;align-items:center;justify-content:center;z-index:9999}
 
-  /* CHATGPT STYLE CHAT */
-
-#chatBox{
+/* CHATGPT STYLE CHAT */
+#aiChat{
 height:420px;
 overflow-y:auto;
 background:#0b1020;
@@ -37,92 +36,6 @@ display:flex;
 flex-direction:column;
 gap:12px;
 scroll-behavior:smooth;
-}
-
-/* message row */
-.msgRow{
-display:flex;
-align-items:flex-end;
-gap:10px;
-}
-
-/* avatars */
-.avatar{
-width:34px;
-height:34px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:16px;
-font-weight:bold;
-}
-
-.userAvatar{
-background:#2563eb;
-}
-
-.aiAvatar{
-background:#22c55e;
-}
-
-/* bubbles */
-.bubble{
-max-width:70%;
-padding:12px 16px;
-border-radius:16px;
-line-height:1.5;
-font-size:14px;
-white-space:pre-wrap;
-}
-
-/* user bubble */
-.userBubble{
-background:#2563eb;
-color:white;
-border-bottom-right-radius:6px;
-margin-left:auto;
-}
-
-/* ai bubble */
-.aiBubble{
-background:#1f2937;
-color:#e5e7eb;
-border-bottom-left-radius:6px;
-}
-
-/* typing animation */
-.typing{
-width:50px;
-display:flex;
-justify-content:space-between;
-padding:10px 14px;
-}
-
-.dot{
-width:8px;
-height:8px;
-background:#9ca3af;
-border-radius:50%;
-animation:blink 1.4s infinite;
-}
-
-.dot:nth-child(2){animation-delay:.2s}
-.dot:nth-child(3){animation-delay:.4s}
-
-@keyframes blink{
-0%{opacity:.2}
-20%{opacity:1}
-100%{opacity:.2}
-  }
-      /* CHAT BOX */
-.chat-box{
-  height:350px;
-  overflow-y:auto;
-  padding:15px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
 }
 
 /* common message */
@@ -155,12 +68,12 @@ animation:blink 1.4s infinite;
 @keyframes fade{
   from{opacity:0; transform:translateY(8px);}
   to{opacity:1; transform:translateY(0);}
-  }
-  
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN BOX -->
 <div id="loginBox">
 <div style="background:#111827;padding:40px;border-radius:20px;
 width:320px;text-align:center;border:2px solid gold;
@@ -174,6 +87,7 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 
 <h1>Royal Games Dashboard</h1>
 
+<!-- SEARCH BOOKING -->
 <div class="section card">
 <h2>Search Booking</h2>
 <input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
@@ -183,44 +97,47 @@ box-shadow:0 0 25px rgba(255,215,0,.3)">
 </div>
 </div>
 
+<!-- RECENT BOOKINGS -->
 <div class="section card">
 <h2>Recent 5 Bookings</h2>
 <div class="table-box">
 <table id="recentTable"></table>
 </div>
 </div>
-  <button onclick="testAI()">Test AI</button>
-<div id="aiResult"></div>
-  
-  <div class="section card">
-<h2>📊 Today Website Analytics</h2>
 
+<!-- ANALYTICS -->
+<div class="section card">
+<h2>📊 Today Website Analytics</h2>
 <p>Total Visitors: <b><span id="totalVisitors">0</span></b></p>
 <p>Booked Visitors: <b><span id="bookedVisitors">0</span></b></p>
 <p>Not Booked: <b><span id="notBookedVisitors">0</span></b></p>
 <p>Total Time Spent: <b><span id="totalTimeSpent">0</span></b></p>
-
 <h3>Top 5 Repeat Visitors</h3>
 <div id="topVisitors"></div>
-  </div>
-  
+</div>
+
+<!-- VIP CUSTOMERS -->
 <div class="section card">
 <h2>Top 3 VIP Customers</h2>
 <button onclick="loadVIP()">Show VIP</button>
 <div id="vipResult"></div>
 </div>
-  <div class="section card">
+
+<!-- CUSTOMER PROFILE -->
+<div class="section card">
 <h2>Customer Profile</h2>
 <div id="customerProfile">
 Select a customer to view profile
 </div>
-  </div>
-  
+</div>
+
+<!-- LAST 10 DAYS PERFORMANCE -->
 <div class="section card">
 <h2>Last 10 Days Performance</h2>
 <div id="tenDaysData"></div>
 </div>
 
+<!-- MONTHLY PERFORMANCE -->
 <div class="section card">
 <h2>Monthly Performance</h2>
 <select id="monthSelect"></select>
@@ -229,50 +146,43 @@ Select a customer to view profile
 <div id="monthlyResult"></div>
 </div>
 
+<!-- YEARLY PERFORMANCE -->
 <div class="section card">
 <h2>Yearly Performance</h2>
 <select id="yearOnlySelect"></select>
 <button onclick="calculateYearly()">Check</button>
 <div id="yearlyResult"></div>
 </div>
-  <div class="section card">
-<h2>Delete Bookings By Year</h2>
 
+<!-- DELETE BOOKINGS BY YEAR -->
+<div class="section card">
+<h2>Delete Bookings By Year</h2>
 <select id="deleteYearSelect"></select>
 <button class="danger" onclick="deleteBookingsByYear()">Delete Year</button>
-
 <div id="deleteYearResult"></div>
-  </div>
-  
-  <div class="section card">
-<h2>Delete Reviews By Month</h2>
+</div>
 
+<!-- DELETE REVIEWS BY MONTH -->
+<div class="section card">
+<h2>Delete Reviews By Month</h2>
 <select id="reviewMonthSelect"></select>
 <select id="reviewYearSelect"></select>
 <button onclick="deleteReviewsByMonth()">Delete Reviews</button>
-
 <div id="deleteReviewResult"></div>
-  </div>
-  <div class="section card">
-<h2>🤖 Royal AI Assistant</h2>
-
-<div id="aiChat" class="chat-box"></div>
-    
-
 </div>
 
-<div style="display:flex;gap:10px;">
-<input id="aiInput" type="text" placeholder="Ask about business..."
-style="flex:1;background:#1f2937;color:white">
-
+<!-- AI CHAT -->
+<div class="section card">
+<h2>🤖 Royal AI Assistant</h2>
+<div id="aiChat"></div>
+<div style="display:flex;gap:10px;margin-top:10px;">
+<input id="aiInput" type="text" placeholder="Ask about business..." style="flex:1;background:#1f2937;color:white">
 <button onclick="sendAI()">Send</button>
 </div>
 </div>
-  
 
 <script>
-
-/******** FIREBASE ********/
+// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
   authDomain: "royalgamesproject.firebaseapp.com",
@@ -282,71 +192,57 @@ const firebaseConfig = {
   messagingSenderId: "1008609758558",
   appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/******** LOGIN ********/
+// LOGIN
 function checkPassword(){
-if(document.getElementById("adminPass").value==="Royal@2026"){
-document.getElementById("loginBox").style.display="none";
-autoCompleteBookings();
-loadRecent();
-tenDays();
-populateSelectors();
-  loadTodayAnalytics();
-loadTopVisitors();
-  document.getElementById("aiInput").addEventListener("keypress", function(e){
-  if(e.key==="Enter"){
-    sendAI();
+  if(document.getElementById("adminPass").value==="Royal@2026"){
+    document.getElementById("loginBox").style.display="none";
+    autoCompleteBookings();
+    loadRecent();
+    tenDays();
+    populateSelectors();
+    loadTodayAnalytics();
+    loadTopVisitors();
+    document.getElementById("aiInput").addEventListener("keypress", function(e){
+      if(e.key==="Enter") sendAI();
+    });
+  } else {
+    document.getElementById("loginError").innerText="Wrong Password";
   }
-});
-  
-  
-  
-  
-}else{
-document.getElementById("loginError").innerText="Wrong Password";
-}
 }
 
-/******** AUTO COMPLETE ********/
+// AUTO COMPLETE BOOKINGS
 function autoCompleteBookings(){
-let today=new Date();
-
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let id=c.key;
-let d=c.val();
-if(!d.startDate||!d.days) return;
-if(d.status==="Cancelled") return;
-
-let start=new Date(d.startDate);
-let end=new Date(start);
-end.setDate(start.getDate()+Number(d.days));
-
-if(today>end){
-db.ref("bookings/"+id).update({status:"Completed"});
-}
-});
-});
+  let today=new Date();
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let id=c.key;
+      let d=c.val();
+      if(!d.startDate||!d.days) return;
+      if(d.status==="Cancelled") return;
+      let start=new Date(d.startDate);
+      let end=new Date(start);
+      end.setDate(start.getDate()+Number(d.days));
+      if(today>end){
+        db.ref("bookings/"+id).update({status:"Completed"});
+      }
+    });
+  });
 }
 
-/******** TABLE ROW ********/
+// TABLE ROW
 function rowHTML(id,d){
-let status=d.status||"Active";
-
-let actionButton = status==="Cancelled"
-? `<button onclick="restoreBooking('${id}')">Restore</button>`
-: `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
-
-return `<tr>
+  let status=d.status||"Active";
+  let actionButton = status==="Cancelled"
+    ? `<button onclick="restoreBooking('${id}')">Restore</button>`
+    : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
+  return `<tr>
 <td>${id}</td>
 <td>
-<a href="#" onclick="loadCustomerProfile('${d.phone}')"
-style="color:#38bdf8;text-decoration:none;font-weight:bold">
-${d.name||''}
-</a>
+<a href="#" onclick="loadCustomerProfile('${d.phone}')" style="color:#38bdf8;text-decoration:none;font-weight:bold">
+${d.name||''}</a>
 </td>
 <td>${d.phone||''}</td>
 <td>${d.console||''}</td>
@@ -355,316 +251,187 @@ ${d.name||''}
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
 <td>${actionButton}</td>
-
 <td>
-<button onclick="markBargainer('${d.phone}')"
-style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">
-⚠️ Bargainer
-</button>
+<button onclick="markBargainer('${d.phone}')" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">
+⚠️ Bargainer</button>
 <br>
 <button class="delete" onclick="deleteBooking('${id}')">Delete</button>
 </td>
 </tr>`;
-  
-
 }
 
-/******** RECENT ********/
+// LOAD RECENT BOOKINGS
 function loadRecent(){
-db.ref("bookings").limitToLast(5).on("value",snap=>{
-let html=`<tr>
+  db.ref("bookings").limitToLast(5).on("value",snap=>{
+    let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
 <th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
-snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
-document.getElementById("recentTable").innerHTML=html;
-});
+    snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
+    document.getElementById("recentTable").innerHTML=html;
+  });
 }
 
-/******** SEARCH ********/
+// SEARCH BOOKING
 function searchBooking(){
-let val=document.getElementById("searchBox").value.toLowerCase();
-db.ref("bookings").once("value",snap=>{
-let html=`<tr>
+  let val=document.getElementById("searchBox").value.toLowerCase();
+  db.ref("bookings").once("value",snap=>{
+    let html=`<tr>
 <th>ID</th><th>Name</th><th>Phone</th>
 <th>Console</th><th>Date</th><th>Days</th>
 <th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
-snap.forEach(c=>{
-let d=c.val();
-if(c.key.toLowerCase().includes(val)||
-(d.name||"").toLowerCase().includes(val)){
-html+=rowHTML(c.key,d);
-}
-});
-document.getElementById("searchTable").innerHTML=html;
-});
-}
-
-/******** CANCEL ********/
-function cancelBooking(id){
-if(confirm("Cancel booking?")){
-db.ref("bookings/"+id).update({status:"Cancelled"});
-}
+    snap.forEach(c=>{
+      let d=c.val();
+      if(c.key.toLowerCase().includes(val)||(d.name||"").toLowerCase().includes(val)){
+        html+=rowHTML(c.key,d);
+      }
+    });
+    document.getElementById("searchTable").innerHTML=html;
+  });
 }
 
-/******** RESTORE ********/
-function restoreBooking(id){
-db.ref("bookings/"+id).update({status:"Active"});
-}
+// CANCEL / RESTORE / DELETE
+function cancelBooking(id){if(confirm("Cancel booking?")) db.ref("bookings/"+id).update({status:"Cancelled"});}
+function restoreBooking(id){db.ref("bookings/"+id).update({status:"Active"});}
+function deleteBooking(id){if(confirm("Permanently delete booking?")) db.ref("bookings/"+id).remove();}
 
-/******** DELETE ********/
-function deleteBooking(id){
-if(confirm("Permanently delete booking?")){
-db.ref("bookings/"+id).remove();
-}
-}
-
-/******** 10 DAYS ********/
+// 10 DAYS PERFORMANCE
 function tenDays(){
-let total=0,count=0;
-let today=new Date();
-
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(d.status!=="Completed") return;
-let end=new Date(d.startDate);
-end.setDate(end.getDate()+Number(d.days||0));
-let diff=(today-end)/(1000*60*60*24);
-if(diff<=10 && diff>=0){
-total+=Number(d.finalPrice||0);
-count++;
-}
-});
-document.getElementById("tenDaysData").innerHTML=
-`Total Completed: ${count}<br>Total Earnings: ₹${total}`;
-});
+  let total=0,count=0;
+  let today=new Date();
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val();
+      if(d.status!=="Completed") return;
+      let end=new Date(d.startDate);
+      end.setDate(end.getDate()+Number(d.days||0));
+      let diff=(today-end)/(1000*60*60*24);
+      if(diff<=10 && diff>=0){total+=Number(d.finalPrice||0);count++;}
+    });
+    document.getElementById("tenDaysData").innerHTML=`Total Completed: ${count}<br>Total Earnings: ₹${total}`;
+  });
 }
 
-/******** SELECTORS ********/
-  function populateSelectors(){
-
-// Booking selectors
-for(let m=1;m<=12;m++){
-document.getElementById("monthSelect").innerHTML+=
-`<option value="${m}">${m}</option>`;
-
-document.getElementById("reviewMonthSelect").innerHTML+=
-`<option value="${m}">${m}</option>`;
-}
-
-let currentYear=new Date().getFullYear();
-for(let y=currentYear;y>=2023;y--){
-document.getElementById("yearSelect").innerHTML+=
-`<option>${y}</option>`;
-
-document.getElementById("yearOnlySelect").innerHTML+=
-`<option>${y}</option>`;
-
-document.getElementById("reviewYearSelect").innerHTML+=
-`<option>${y}</option>`;
-  document.getElementById("deleteYearSelect").innerHTML+=
-`<option>${y}</option>`;
-  
-}
+// POPULATE SELECTORS
+function populateSelectors(){
+  for(let m=1;m<=12;m++){
+    document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`;
+    document.getElementById("reviewMonthSelect").innerHTML+=`<option value="${m}">${m}</option>`;
   }
-  
+  let currentYear=new Date().getFullYear();
+  for(let y=currentYear;y>=2023;y--){
+    document.getElementById("yearSelect").innerHTML+=`<option>${y}</option>`;
+    document.getElementById("yearOnlySelect").innerHTML+=`<option>${y}</option>`;
+    document.getElementById("reviewYearSelect").innerHTML+=`<option>${y}</option>`;
+    document.getElementById("deleteYearSelect").innerHTML+=`<option>${y}</option>`;
+  }
+}
 
-
-/******** MONTHLY ********/
+// MONTHLY & YEARLY
 function calculateMonthly(){
-let m=monthSelect.value;
-let y=yearSelect.value;
-let total=0,completed=0,cancelled=0;
-
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.startDate) return;
-let bd=new Date(d.startDate);
-if((bd.getMonth()+1)==m && bd.getFullYear()==y){
-if(d.status==="Completed"){
-total+=Number(d.finalPrice||0);
-completed++;
+  let m=monthSelect.value;
+  let y=yearSelect.value;
+  let total=0,completed=0,cancelled=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bd=new Date(d.startDate);
+      if((bd.getMonth()+1)==m && bd.getFullYear()==y){
+        if(d.status==="Completed") {total+=Number(d.finalPrice||0);completed++;}
+        if(d.status==="Cancelled") cancelled++;
+      }
+    });
+    monthlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
+  });
 }
-if(d.status==="Cancelled") cancelled++;
-}
-});
-monthlyResult.innerHTML=
-`Completed: ${completed}<br>
-Cancelled: ${cancelled}<br>
-Revenue: ₹${total}`;
-});
-}
-
-/******** YEARLY ********/
 function calculateYearly(){
-let y=yearOnlySelect.value;
-let total=0,completed=0,cancelled=0;
+  let y=yearOnlySelect.value; let total=0,completed=0,cancelled=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bd=new Date(d.startDate);
+      if(bd.getFullYear()==y){
+        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;}
+        if(d.status==="Cancelled") cancelled++;
+      }
+    });
+    yearlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
+  });
+}
 
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.startDate) return;
-let bd=new Date(d.startDate);
-if(bd.getFullYear()==y){
-if(d.status==="Completed"){
-total+=Number(d.finalPrice||0);
-completed++;
-}
-if(d.status==="Cancelled") cancelled++;
-}
-});
-yearlyResult.innerHTML=
-`Completed: ${completed}<br>
-Cancelled: ${cancelled}<br>
-Revenue: ₹${total}`;
-});
-}
+// DELETE REVIEWS / BOOKINGS
 function deleteReviewsByMonth(){
-
-let m=document.getElementById("reviewMonthSelect").value;
-let y=document.getElementById("reviewYearSelect").value;
-
-if(!confirm("Are you sure you want to delete reviews for selected month?")) return;
-
-let deletedCount=0;
-
-db.ref("reviews").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.timestamp) return;
-
-let reviewDate=new Date(d.timestamp);
-
-if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){
-db.ref("reviews/"+c.key).remove();
-deletedCount++;
+  let m=document.getElementById("reviewMonthSelect").value;
+  let y=document.getElementById("reviewYearSelect").value;
+  if(!confirm("Are you sure?")) return;
+  let deletedCount=0;
+  db.ref("reviews").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.timestamp) return;
+      let reviewDate=new Date(d.timestamp);
+      if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){
+        db.ref("reviews/"+c.key).remove();
+        deletedCount++;
+      }
+    });
+    document.getElementById("deleteReviewResult").innerHTML=`Deleted Reviews: ${deletedCount}`;
+  });
 }
-});
-
-document.getElementById("deleteReviewResult").innerHTML=
-`Deleted Reviews: ${deletedCount}`;
-});
-}
-  function deleteBookingsByYear(){
-
-let y=document.getElementById("deleteYearSelect").value;
-
-if(!confirm("Delete ALL bookings for selected year?")) return;
-
-let deletedCount=0;
-
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.startDate) return;
-
-let bookingDate=new Date(d.startDate);
-
-if(bookingDate.getFullYear()==y){
-db.ref("bookings/"+c.key).remove();
-deletedCount++;
-}
-});
-
-document.getElementById("deleteYearResult").innerHTML=
-`Deleted Bookings: ${deletedCount}`;
-});
-  }
-  function loadVIP(){
-
-let customerCount={};
-
-db.ref("bookings").once("value",snap=>{
-snap.forEach(c=>{
-let d=c.val();
-if(!d.phone) return;
-
-// OPTIONAL: count only completed bookings
-// if(d.status!=="Completed") return;
-
-let key=d.phone;
-
-if(!customerCount[key]){
-customerCount[key]={
-name:d.name || "Unknown",
-phone:d.phone,
-count:0
-};
+function deleteBookingsByYear(){
+  let y=document.getElementById("deleteYearSelect").value;
+  if(!confirm("Delete ALL bookings for selected year?")) return;
+  let deletedCount=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bookingDate=new Date(d.startDate);
+      if(bookingDate.getFullYear()==y){db.ref("bookings/"+c.key).remove();deletedCount++;}
+    });
+    document.getElementById("deleteYearResult").innerHTML=`Deleted Bookings: ${deletedCount}`;
+  });
 }
 
-customerCount[key].count++;
-});
-
-let arr=Object.values(customerCount);
-
-arr.sort((a,b)=>b.count-a.count);
-
-let top3=arr.slice(0,3);
-
-let html="<ol>";
-top3.forEach(c=>{
-html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`;
-});
-html+="</ol>";
-
-document.getElementById("vipResult").innerHTML=html;
-});
-  }
-  function loadCustomerProfile(phone){
-
-if(!phone){
-alert("Phone not found");
-return;
+// VIP CUSTOMERS
+function loadVIP(){
+  let customerCount={};
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.phone) return;
+      let key=d.phone;
+      if(!customerCount[key]) customerCount[key]={name:d.name||"Unknown",phone:d.phone,count:0};
+      customerCount[key].count++;
+    });
+    let arr=Object.values(customerCount);
+    arr.sort((a,b)=>b.count-a.count);
+    let top3=arr.slice(0,3);
+    let html="<ol>";
+    top3.forEach(c=>{html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`});
+    html+="</ol>";
+    document.getElementById("vipResult").innerHTML=html;
+  });
 }
 
-let totalSpent=0;
-let totalBookings=0;
-let completed=0;
-let cancelled=0;
-
-let historyHTML="<h3>Booking History</h3><ul>";
-
-db.ref("bookings").once("value",snap=>{
-
-snap.forEach(c=>{
-let d=c.val();
-
-if(d.phone===phone){
-
-totalBookings++;
-
-if(d.status==="Completed"){
-completed++;
-totalSpent+=Number(d.finalPrice||0);
-}
-
-if(d.status==="Cancelled"){
-cancelled++;
-}
-
-historyHTML+=`<li>
-${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}
-</li>`;
-}
-});
-
-historyHTML+="</ul>";
-
-let loyalty="Bronze";
-if(totalSpent>5000) loyalty="Silver";
-if(totalSpent>15000) loyalty="Gold 👑";
-if(totalSpent>30000) loyalty="Platinum 💎";
-
-db.ref("customerNotes/"+phone).once("value",noteSnap=>{
-let tag="None";
-
-if(noteSnap.exists()){
-tag=noteSnap.val().tag;
-}
-
-document.getElementById("customerProfile").innerHTML=`
+// CUSTOMER PROFILE
+function loadCustomerProfile(phone){
+  if(!phone){alert("Phone not found");return;}
+  let totalSpent=0,totalBookings=0,completed=0,cancelled=0;
+  let historyHTML="<h3>Booking History</h3><ul>";
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val();
+      if(d.phone===phone){
+        totalBookings++;
+        if(d.status==="Completed"){completed++;totalSpent+=Number(d.finalPrice||0);}
+        if(d.status==="Cancelled") cancelled++;
+        historyHTML+=`<li>${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}</li>`;
+      }
+    });
+    historyHTML+="</ul>";
+    let loyalty="Bronze";if(totalSpent>5000) loyalty="Silver";if(totalSpent>15000) loyalty="Gold 👑";if(totalSpent>30000) loyalty="Platinum 💎";
+    db.ref("customerNotes/"+phone).once("value",noteSnap=>{
+      let tag="None";
+      if(noteSnap.exists()){tag=noteSnap.val().tag;}
+      document.getElementById("customerProfile").innerHTML=`
 <b>Phone:</b> ${phone}<br>
 <b>Total Bookings:</b> ${totalBookings}<br>
 <b>Completed:</b> ${completed}<br>
@@ -672,350 +439,107 @@ document.getElementById("customerProfile").innerHTML=`
 <b>Total Spent:</b> ₹${totalSpent}<br>
 <b>Loyalty Level:</b> ${loyalty}<br>
 <b>Special Tag:</b> ${tag}<br><br>
-${historyHTML}
-`;
+${historyHTML}`;
+    });
+  });
+}
 
-});
-
-});
-
-                        }
-  
-  /******** BARGAINER MEMORY ********/
+// BARGAINER
 function markBargainer(phone){
-
-if(!phone){
-alert("Phone number not found");
-return;
+  if(!phone){alert("Phone number not found");return;}
+  firebase.database().ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()})
+  .then(()=>{alert("Customer saved as Bargainer. Next time you will get alert.");});
 }
 
-firebase.database().ref('customerNotes/'+phone).set({
-tag:"BARGAINER",
-timestamp:Date.now()
-}).then(()=>{
-alert("Customer saved as Bargainer. Next time you will get alert.");
-});
-}
-  
-  /******** WEBSITE ANALYTICS ********/
-
+// TODAY ANALYTICS
 function loadTodayAnalytics(){
-
-const todayKey = new Date().toISOString().split("T")[0];
-
-firebase.database().ref("dailyVisitors/"+todayKey)
-.once("value")
-.then(snapshot=>{
-
-let totalVisitors = 0;
-let bookedCount = 0;
-let notBookedCount = 0;
-let totalTimeSpent = 0;
-
-snapshot.forEach(child=>{
-    totalVisitors++;
-
-    const data = child.val();
-
-    if(data.booked){
-        bookedCount++;
-    } else {
-        notBookedCount++;
-    }
-
-    totalTimeSpent += data.totalTime || 0;
-});
-
-document.getElementById("totalVisitors").innerText = totalVisitors;
-document.getElementById("bookedVisitors").innerText = bookedCount;
-document.getElementById("notBookedVisitors").innerText = notBookedCount;
-document.getElementById("totalTimeSpent").innerText =
-Math.floor(totalTimeSpent/60000) + " Minutes";
-
-});
+  const todayKey=new Date().toISOString().split("T")[0];
+  firebase.database().ref("dailyVisitors/"+todayKey).once("value").then(snapshot=>{
+    let totalVisitors=0,bookedCount=0,notBookedCount=0,totalTimeSpent=0;
+    snapshot.forEach(child=>{
+      totalVisitors++;
+      const data=child.val();
+      if(data.booked) bookedCount++; else notBookedCount++;
+      totalTimeSpent+=data.totalTime||0;
+    });
+    document.getElementById("totalVisitors").innerText=totalVisitors;
+    document.getElementById("bookedVisitors").innerText=bookedCount;
+    document.getElementById("notBookedVisitors").innerText=notBookedCount;
+    document.getElementById("totalTimeSpent").innerText=Math.floor(totalTimeSpent/60000)+" Minutes";
+  });
 }
-
-
 function loadTopVisitors(){
-
-const todayKey = new Date().toISOString().split("T")[0];
-
-firebase.database().ref("dailyVisitors/"+todayKey)
-.orderByChild("visits")
-.limitToLast(5)
-.once("value")
-.then(snapshot=>{
-
-let html = "<ol>";
-
-snapshot.forEach(child=>{
-    const data = child.val();
-    html += `<li>${child.key} - ${data.visits} visits</li>`;
-});
-
-html += "</ol>";
-
-document.getElementById("topVisitors").innerHTML = html;
-
-});
+  const todayKey=new Date().toISOString().split("T")[0];
+  firebase.database().ref("dailyVisitors/"+todayKey).orderByChild("visits").limitToLast(5).once("value").then(snapshot=>{
+    let html="<ol>";
+    snapshot.forEach(child=>{
+      const data=child.val();
+      html+=`<li>${child.key} - ${data.visits} visits</li>`;
+    });
+    html+="</ol>";
+    document.getElementById("topVisitors").innerHTML=html;
+  });
 }
-  function sendAI(){
-  const input = document.getElementById("aiInput");
-  const chatBox = document.getElementById("aiChat"); // <-- fixed
 
-  let question = input.value.trim();
-  if(!question) return;
-
-  // user message
-  addMessage(question,"user");
-  input.value="";
-
-  // thinking message
+// AI CHAT FUNCTIONS
+async function sendAI(){
+  const input=document.getElementById("aiInput");
+  const chatBox=document.getElementById("aiChat");
+  let question=input.value.trim(); if(!question) return;
+  addMessage(question,"user"); input.value="";
+  
   const thinking=document.createElement("div");
-  thinking.className="msgRow";
-  thinking.innerHTML=`
-    <div class="avatar aiAvatar">AI</div>
-    <div class="bubble aiBubble typing">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-  `;
-  chatBox.appendChild(thinking);
-  chatBox.scrollTop=chatBox.scrollHeight;
+  thinking.className="bot msg"; thinking.textContent="AI is typing...";
+  chatBox.appendChild(thinking); chatBox.scrollTop=chatBox.scrollHeight;
 
-  // AI fetch
   buildBusinessReport().then(report=>{
     fetch("https://royal-ai-games.vercel.app/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        message: `
-You are a business analyst for a PlayStation & Xbox rental shop.
-Owner Question:
-${question}
-Real Shop Data:
-${report}
-Give clear advice and suggestions to grow bookings and profit.`
+        message: `You are a business analyst for a PlayStation & Xbox rental shop.\nOwner Question:\n${question}\nReal Shop Data:\n${report}\nGive clear advice and suggestions to grow bookings and profit.`
       })
-    })
-    .then(res=>res.json())
+    }).then(res=>res.json())
     .then(data=>{
       thinking.remove();
-      if(data.reply){
-        addMessage(data.reply,"bot"); 
-      }else{
-        addMessage("AI did not respond properly","bot");
-      }
-    })
-    .catch(err=>{
-      thinking.innerText="Server connection error";
+      if(data.reply){addMessage(data.reply,"bot");}else{addMessage("AI did not respond properly","bot");}
+    }).catch(err=>{
+      thinking.textContent="Server connection error";
       console.log(err);
     });
   });
-  }
-  
+}
 
+function addMessage(text,sender){
+  const chat=document.getElementById("aiChat");
+  const msg=document.createElement("div");
+  msg.classList.add("msg");
+  if(sender==="user"){msg.classList.add("user");}else{msg.classList.add("bot");}
+  msg.textContent=text; chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
+}
 
-  
-  
-  
-  
-  
-
-  
-  async function testAI() {
-
-  document.getElementById("aiResult").innerText = "Analyzing your business...";
-
-  // 1️⃣ Firebase se bookings read karo
-  const snap = await db.ref("bookings").once("value");
-
-  let totalBookings = 0;
-  let totalRevenue = 0;
-  let active = 0;
-  let completed = 0;
-  let cancelled = 0;
-
-  snap.forEach(c=>{
-    const d = c.val();
-    totalBookings++;
-
-    totalRevenue += Number(d.finalPrice || 0);
-
-    if(d.status==="Active") active++;
-    if(d.status==="Completed") completed++;
-    if(d.status==="Cancelled") cancelled++;
+async function buildBusinessReport(){
+  const bookingSnap=await db.ref("bookings").once("value");
+  const noteSnap=await db.ref("customerNotes").once("value");
+  const visitorSnap=await db.ref("dailyVisitors").once("value");
+  let report="",totalBookings=0,totalRevenue=0,completed=0,cancelled=0,active=0;
+  let bargainCustomers={}; noteSnap.forEach(n=>{if(n.val().tag==="BARGAINER") bargainCustomers[n.key]=true;});
+  bookingSnap.forEach(c=>{
+    const d=c.val(); totalBookings++; totalRevenue+=Number(d.finalPrice||0);
+    if(d.status==="Completed") completed++; if(d.status==="Cancelled") cancelled++; if(d.status==="Active") active++;
+    let bargain=bargainCustomers[d.phone]?"YES":"NO";
+    report+=`\nCustomer: ${d.name}\nPhone: ${d.phone}\nConsole: ${d.console}\nPaid: ₹${d.finalPrice}\nStatus: ${d.status}\nBargainer: ${bargain}\n---------------------`;
   });
-
-  // 2️⃣ AI ko context bhejna
-  const prompt = `
-Here is my real business data:
-
-Total bookings: ${totalBookings}
-Total revenue: ₹${totalRevenue}
-Active bookings: ${active}
-Completed bookings: ${completed}
-Cancelled bookings: ${cancelled}
-
-Analyze my business and tell:
-- Is business healthy?
-- What should I improve?
-- How to increase profit?
-`;
-
-  try {
-    const response = await fetch("https://royal-ai-games.vercel.app/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: prompt })
-    });
-
-    const data = await response.json();
-
-    document.getElementById("aiResult").innerText = data.reply;
-
-  } catch (error) {
-    document.getElementById("aiResult").innerText = "AI connection error";
-  }
-  }
-  window.addEventListener("load", function(){
-
-const aiBox=document.getElementById("aiInput");
-
-aiBox.addEventListener("keydown",function(e){
-if(e.key==="Enter" && !e.shiftKey){
-e.preventDefault();
-sendAI();
-}
-});
-
-});
-  
-  
-  
-let aiBox = document.getElementById("aiInput");
-
-if(aiBox){
-aiBox.addEventListener("keypress", function(e){
-if(e.key === "Enter"){
-sendAI();
-}
-});
+  let totalVisitors=0,bookedVisitors=0;
+  visitorSnap.forEach(day=>{day.forEach(v=>{totalVisitors++; if(v.val().booked) bookedVisitors++;});});
+  return `You are my personal business manager for a PlayStation 5 & Xbox rental shop.\n===== BUSINESS STATS =====\nTotal Bookings: ${totalBookings}\nRevenue: ₹${totalRevenue}\nCompleted: ${completed}\nCancelled: ${cancelled}\nActive: ${active}\nVisitors: ${totalVisitors}\nConverted Customers: ${bookedVisitors}\n===== CUSTOMER DATA =====\n${report}\nGive practical advice to grow my rental business and handle customers.`;
 }
 
+window.addEventListener("load",function(){
+  document.getElementById("aiInput").addEventListener("keydown",function(e){
+    if(e.key==="Enter" && !e.shiftKey){e.preventDefault(); sendAI();}
+  });
 });
-  
-  
-  function addMessage(text, sender){
-  const chat = document.getElementById("aiChat"); // always aiChat
-  const msg = document.createElement("div");
-  msg.classList.add("msg");
-
-  if(sender === "user"){
-    msg.classList.add("user");
-  } else {
-    msg.classList.add("bot");
-  }
-
-  msg.textContent = text;
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-  }
-  
-  
-  async function buildBusinessReport(){
-
-const bookingSnap = await db.ref("bookings").once("value");
-const noteSnap = await db.ref("customerNotes").once("value");
-const visitorSnap = await db.ref("dailyVisitors").once("value");
-
-let report = "";
-let totalBookings=0,totalRevenue=0,completed=0,cancelled=0,active=0;
-
-let bargainCustomers={};
-noteSnap.forEach(n=>{
-const d=n.val();
-if(d.tag==="BARGAINER"){
-bargainCustomers[n.key]=true;
-}
-});
-
-bookingSnap.forEach(c=>{
-const d=c.val();
-totalBookings++;
-totalRevenue+=Number(d.finalPrice||0);
-
-if(d.status==="Completed") completed++;
-if(d.status==="Cancelled") cancelled++;
-if(d.status==="Active") active++;
-
-let bargain = bargainCustomers[d.phone]?"YES":"NO";
-
-report+=`
-Customer: ${d.name}
-Phone: ${d.phone}
-Console: ${d.console}
-Paid: ₹${d.finalPrice}
-Status: ${d.status}
-Bargainer: ${bargain}
----------------------
-`;
-});
-
-let totalVisitors=0,bookedVisitors=0;
-visitorSnap.forEach(day=>{
-day.forEach(v=>{
-totalVisitors++;
-if(v.val().booked) bookedVisitors++;
-});
-});
-
-return `
-You are my personal business manager for a PlayStation 5 & Xbox rental shop.
-
-===== BUSINESS STATS =====
-Total Bookings: ${totalBookings}
-Revenue: ₹${totalRevenue}
-Completed: ${completed}
-Cancelled: ${cancelled}
-Active: ${active}
-
-Visitors: ${totalVisitors}
-Converted Customers: ${bookedVisitors}
-
-===== CUSTOMER DATA =====
-${report}
-
-Give practical advice to grow my rental business and handle customers.
-`;
-  }
-  
-  function addMessage(text, sender){
-
-  const chat = document.getElementById("aiChat");
-
-  const msg = document.createElement("div");
-  msg.classList.add("msg");
-
-  if(sender === "user"){
-    msg.classList.add("user");
-  }else{
-    msg.classList.add("bot");
-  }
-
-  msg.textContent = text;
-  chat.appendChild(msg);
-
-  // auto scroll bottom
-  chat.scrollTop = chat.scrollHeight;
-  }
-  
-  
-  
-  
 </script>
 </body>
 </html>
@@ -1024,4 +548,5 @@ Give practical advice to grow my rental business and handle customers.
 
 
 
-
+  
+  
