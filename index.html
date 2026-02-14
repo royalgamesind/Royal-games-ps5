@@ -474,35 +474,59 @@ function loadTopVisitors(){
 }
 
 // ---------- AI CHAT ----------
-async function sendAI(){
-  const input=document.getElementById("aiInput");
-  const chatBox=document.getElementById("aiChat");
-  let question=input.value.trim(); if(!question) return;
-  addMessage(question,"user"); input.value="";
+  async function sendAI(){
+  const input = document.getElementById("aiInput");
+  const chatBox = document.getElementById("aiChat");
+  const question = input.value.trim();
+  if(!question) return;
   
-  const thinking=document.createElement("div");
-  thinking.className="bot msg"; thinking.textContent="AI is thinking...";
-  chatBox.appendChild(thinking); chatBox.scrollTop=chatBox.scrollHeight;
+  addMessage(question, "user");
+  input.value = "";
+
+  const thinking = document.createElement("div");
+  thinking.className = "bot msg";
+  thinking.textContent = "AI is thinking...";
+  chatBox.appendChild(thinking);
+  chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    const report = await buildBusinessReport();
-    const response = await fetch("https://royal-ai-games.vercel.app/api/chat",{ 
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ message: `You are a God-level AI for business and general knowledge.\nOwner Question:\n${question}\nReal Shop Data:\n${report}` })
+    const report = await buildBusinessReport(); // short summary
+    const prompt = `
+You are a God-level AI assistant. Two modes:
+1. Business mode: Use shop data below to answer business questions.
+2. General mode: Answer normally if question is general.
+
+Owner Question: ${question}
+
+Shop Summary: 
+${report}
+`;
+
+    const response = await fetch("https://royal-ai-games.vercel.app/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: prompt })
     });
+
     const data = await response.json();
     thinking.remove();
+
     if(data.reply){
-      const finalResp = await handleAICommand(data.reply);
-      addMessage(finalResp,"bot");
-    } else { addMessage("AI did not respond properly","bot"); }
+      const finalResp = await handleAICommand(data.reply); // executes commands if any
+      addMessage(finalResp, "bot");
+    } else {
+      addMessage("AI did not understand. Try again.", "bot");
+    }
+
   } catch(err){
     thinking.remove();
-    addMessage("AI Error. Check console.","bot");
-    console.error("AI Error:", err);
+    addMessage("AI Error. Check console.", "bot");
+    console.error(err);
   }
-}
+  }
+  
+async function sendAI(){
+
 
 function addMessage(text,sender){
   const chat=document.getElementById("aiChat");
