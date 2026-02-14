@@ -607,7 +607,50 @@ document.getElementById("topVisitors").innerHTML = html;
 
 });
 }
+async function sendAI(){
 
+let input=document.getElementById("aiInput");
+let question=input.value.trim();
+
+if(!question) return;
+
+addMessage(question,"user");
+input.value="";
+
+addMessage("Thinking...","ai");
+
+let report = await buildBusinessReport();
+
+let prompt=`
+You are a manager of a PlayStation rental shop.
+
+Real shop data:
+${report}
+
+Owner question:
+${question}
+
+Answer in simple language and give practical advice.
+`;
+
+try{
+
+const res=await fetch("https://royal-ai-games.vercel.app/api/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({message:prompt})
+});
+
+const data=await res.json();
+
+document.getElementById("chatBox").lastChild.remove();
+addMessage(data.reply || "No response","ai");
+
+}catch{
+document.getElementById("chatBox").lastChild.innerText="AI server offline.";
+}
+}
+  
   async function testAI() {
 
   let prompt = "Give 3 growth ideas for a gaming rental business.";
