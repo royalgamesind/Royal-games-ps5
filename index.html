@@ -914,17 +914,23 @@ sendAI();
 });
   
   
-  
-  function addMessage(text,type){
+  function addMessage(text, sender){
+  const chat = document.getElementById("aiChat"); // always aiChat
+  const msg = document.createElement("div");
+  msg.classList.add("msg");
 
-let div=document.createElement("div");
-div.className="msg "+type;
-div.innerText=text;
-
-let box=document.getElementById("chatBox");
-box.appendChild(div);
-box.scrollTop=box.scrollHeight;
+  if(sender === "user"){
+    msg.classList.add("user");
+  } else {
+    msg.classList.add("bot");
   }
+
+  msg.textContent = text;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  }
+  
+  
   async function buildBusinessReport(){
 
 const bookingSnap = await db.ref("bookings").once("value");
