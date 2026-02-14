@@ -476,10 +476,10 @@ function loadTopVisitors(){
 // ---------- AI CHAT ----------
   async function sendAI() {
   const input = document.getElementById("aiInput");
-  const question = input.value.trim();
-  if(!question) return;
+  const message = input.value.trim();
+  if(!message) return;
 
-  addMessage(question, "user");
+  addMessage(message, "user");
   input.value = "";
 
   const chatBox = document.getElementById("aiChat");
@@ -493,17 +493,28 @@ function loadTopVisitors(){
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: question, isAdmin: true })
+      body: JSON.stringify({ query: message })
     });
     const data = await response.json();
     thinking.remove();
     addMessage(data.reply || "No reply received.", "bot");
-  } catch(err) {
+  } catch (err) {
     thinking.remove();
     addMessage("Error contacting AI.", "bot");
     console.error(err);
   }
+}
+
+function addMessage(text, sender) {
+  const chat = document.getElementById("aiChat");
+  const msg = document.createElement("div");
+  msg.classList.add("msg", sender === "user" ? "user" : "bot");
+  msg.textContent = text;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
   }
+    
+
   
   
   
