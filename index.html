@@ -676,6 +676,20 @@ document.getElementById("chatBox").lastChild.innerText="AI server offline.";
       "Error connecting to Royal AI server.";
   }
   }
+  window.addEventListener("load", function(){
+
+let aiBox = document.getElementById("aiInput");
+
+if(aiBox){
+aiBox.addEventListener("keypress", function(e){
+if(e.key === "Enter"){
+sendAI();
+}
+});
+}
+
+});
+  
   
   <div class="section card">
 <h2>🤖 Royal AI Assistant</h2>
