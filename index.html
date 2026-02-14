@@ -258,14 +258,7 @@ Select a customer to view profile
 
 <div id="aiChat" class="chat-box"></div>
     
-height:350px;
-overflow-y:auto;
-background:#0f172a;
-padding:15px;
-border-radius:14px;
-margin-bottom:10px;
-font-size:14px;
-line-height:1.5;">
+
 </div>
 
 <div style="display:flex;gap:10px;">
@@ -303,11 +296,13 @@ tenDays();
 populateSelectors();
   loadTodayAnalytics();
 loadTopVisitors();
-  document.getElementById("aiInput").addEventListener("keypress",function(e){
-if(e.key==="Enter"){
-sendAI();
-}
+  document.getElementById("aiInput").addEventListener("keypress", function(e){
+  if(e.key==="Enter"){
+    sendAI();
+  }
 });
+  
+  
   
   
 }else{
