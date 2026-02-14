@@ -10,42 +10,40 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI,sans-serif;background:#0b0f1a;color:#fff;padding:20px}
-h1{text-align:center;color:gold}
-.section{margin-top:30px}
-.card{background:#111827;padding:20px;border-radius:18px;margin-top:15px;box-shadow:0 0 15px rgba(255,215,0,.08)}
-input,select,button{padding:10px;border-radius:8px;border:none;margin:5px 0}
-input,select{background:#1f2937;color:#fff;width:100%}
-button{background:gold;color:#000;font-weight:bold;cursor:pointer}
-button.danger{background:#e53935;color:#fff}
-button.delete{background:#6b7280;color:#fff}
-.table-box{max-height:260px;overflow-y:auto;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
-th{color:#facc15}
+body {margin:0; font-family:Segoe UI; background:#0b0f1a; color:#fff; padding:20px;}
+h1{text-align:center;color:gold;}
+.section{margin-top:30px;}
+.card{background:#111827; padding:20px; border-radius:18px; margin-top:15px; box-shadow:0 0 15px rgba(255,215,0,.08);}
+input, select, button{padding:10px; border-radius:8px; border:none; margin:5px 0;}
+input, select{background:#1f2937; color:#fff;}
+button{background:gold; color:#000; font-weight:bold; cursor:pointer;}
+button.danger{background:#e53935; color:#fff;}
+button.delete{background:#6b7280; color:#fff;}
+.table-box{max-height:260px; overflow-y:auto; overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:14px;}
+th, td{padding:8px; border-bottom:1px solid #333; text-align:left;}
+th{color:#facc15;}
+#loginBox{position:fixed; inset:0; background:linear-gradient(135deg,#0b0f1a,#111827);
+display:flex; align-items:center; justify-content:center; z-index:9999;}
 
-/* LOGIN */
-#loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
-display:flex;align-items:center;justify-content:center;z-index:9999}
-
-/* CHAT */
-#aiChat{height:420px;overflow-y:auto;background:#0b1020;padding:18px;border-radius:18px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
-.msg{max-width:75%;padding:12px 14px;border-radius:18px;font-size:14px;line-height:1.4;word-wrap:break-word;animation:fade .25s ease;}
-.user{align-self:flex-end;background:#facc15;color:#000;border-bottom-right-radius:5px;}
-.bot{align-self:flex-start;background:#1f2937;color:#fff;border-bottom-left-radius:5px;}
-@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+/* CHATGPT STYLE CHAT */
+#aiChat{height:420px; overflow-y:auto; background:#0b1020; padding:18px; border-radius:18px; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth;}
+.msg{max-width:75%; padding:12px 14px; border-radius:18px; font-size:14px; line-height:1.4; word-wrap:break-word; animation:fade .25s ease;}
+.user{align-self:flex-end; background:#facc15; color:#000; border-bottom-right-radius:5px;}
+.bot{align-self:flex-start; background:#1f2937; color:#fff; border-bottom-left-radius:5px;}
+@keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN BOX -->
 <div id="loginBox">
-  <div style="background:#111827;padding:40px;border-radius:20px;width:320px;text-align:center;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.3)">
-    <h2 style="color:gold">👑 Royal Admin</h2>
-    <input type="password" id="adminPass" placeholder="Enter Password">
-    <button onclick="checkPassword()">Login</button>
-    <p id="loginError" style="color:#f87171"></p>
-  </div>
+<div style="background:#111827;padding:40px;border-radius:20px;width:320px;text-align:center;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.3)">
+<h2 style="color:gold">👑 Royal Admin</h2>
+<input type="password" id="adminPass" placeholder="Enter Password" style="width:100%">
+<button onclick="checkPassword()" style="width:100%">Login</button>
+<p id="loginError" style="color:#f87171"></p>
+</div>
 </div>
 
 <h1>Royal Games Dashboard</h1>
@@ -143,13 +141,13 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 </div>
 
 <script>
-// FIREBASE
+// ---------- FIREBASE ----------
 const firebaseConfig = {
   apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
   authDomain: "royalgamesproject.firebaseapp.com",
   databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "royalgamesproject",
-  storageBucket: "royalgamesproject.appspot.com",
+  storageBucket: "royalgamesproject.firebasestorage.app",
   messagingSenderId: "1008609758558",
   appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
 };
@@ -159,29 +157,23 @@ const SAFE_STATUSES = ["Active","Completed","Cancelled"];
 
 // ---------- LOGIN ----------
 function checkPassword(){
-  const pass = document.getElementById("adminPass").value;
-  if(pass==="Royal@2026"){
+  if(document.getElementById("adminPass").value==="Royal@2026"){
     document.getElementById("loginBox").style.display="none";
-    initDashboard();
+    autoCompleteBookings();
+    loadRecent();
+    tenDays();
+    populateSelectors();
+    loadTodayAnalytics();
+    loadTopVisitors();
+    document.getElementById("aiInput").addEventListener("keypress", function(e){
+      if(e.key==="Enter") sendAI();
+    });
   } else {
     document.getElementById("loginError").innerText="Wrong Password";
   }
 }
 
-// ---------- INIT DASHBOARD ----------
-function initDashboard(){
-  autoCompleteBookings();
-  loadRecent();
-  tenDays();
-  populateSelectors();
-  loadTodayAnalytics();
-  loadTopVisitors();
-  document.getElementById("aiInput").addEventListener("keypress", function(e){
-    if(e.key==="Enter") sendAI();
-  });
-}
-
-// ---------- AUTO COMPLETE BOOKINGS ----------
+// ---------- BOOKING FUNCTIONS ----------
 function autoCompleteBookings(){
   let today=new Date();
   db.ref("bookings").once("value",snap=>{
@@ -193,14 +185,11 @@ function autoCompleteBookings(){
       let start=new Date(d.startDate);
       let end=new Date(start);
       end.setDate(start.getDate()+Number(d.days));
-      if(today>end){
-        db.ref("bookings/"+id).update({status:"Completed"});
-      }
+      if(today>end){ db.ref("bookings/"+id).update({status:"Completed"}); }
     });
   });
 }
 
-// ---------- ROW HTML ----------
 function rowHTML(id,d){
   let status=d.status||"Active";
   let actionButton = status==="Cancelled"
@@ -216,21 +205,20 @@ function rowHTML(id,d){
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
 <td>${actionButton}</td>
-<td><button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
+<td><button onclick="markBargainer('${d.phone}')" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">⚠️ Bargainer</button><br>
+<button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
 </tr>`;
 }
 
-// ---------- LOAD RECENT ----------
 function loadRecent(){ 
   db.ref("bookings").limitToLast(5).on("value",snap=>{
     let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
     snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
     document.getElementById("recentTable").innerHTML=html;
-  });
+  }); 
 }
 
-// ---------- SEARCH ----------
-function searchBooking(){
+function searchBooking(){ 
   let val=document.getElementById("searchBox").value.toLowerCase();
   db.ref("bookings").once("value",snap=>{
     let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
@@ -241,17 +229,17 @@ function searchBooking(){
       }
     });
     document.getElementById("searchTable").innerHTML=html;
-  });
+  }); 
 }
 
-// ---------- CANCEL / RESTORE / DELETE ----------
 function cancelBooking(id){if(confirm("Cancel booking?")) db.ref("bookings/"+id).update({status:"Cancelled"});}
 function restoreBooking(id){db.ref("bookings/"+id).update({status:"Active"});}
 function deleteBooking(id){if(confirm("Permanently delete booking?")) db.ref("bookings/"+id).remove();}
 
-// ---------- 10 DAYS ----------
+// ---------- PERFORMANCE & ANALYTICS ----------
 function tenDays(){
-  let today=new Date(),total=0,count=0;
+  let total=0,count=0;
+  let today=new Date();
   db.ref("bookings").once("value",snap=>{
     snap.forEach(c=>{
       let d=c.val();
@@ -265,7 +253,6 @@ function tenDays(){
   });
 }
 
-// ---------- SELECTORS ----------
 function populateSelectors(){
   for(let m=1;m<=12;m++){
     document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`;
@@ -280,9 +267,247 @@ function populateSelectors(){
   }
 }
 
-// ---------- MORE FUNCTIONS ----------
-// Monthly, Yearly, Delete Reviews, VIP, Customer Profile, AI functions will be the same as in your previous code
-// For brevity, I can paste the full AI assistant and all functions next if you want
+function calculateMonthly(){
+  let m=monthSelect.value; let y=yearSelect.value;
+  let total=0,completed=0,cancelled=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bd=new Date(d.startDate);
+      if((bd.getMonth()+1)==m && bd.getFullYear()==y){
+        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;}
+        if(d.status==="Cancelled") cancelled++;
+      }
+    });
+    monthlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
+  });
+}
+
+function calculateYearly(){
+  let y=yearOnlySelect.value;
+  let total=0,completed=0,cancelled=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bd=new Date(d.startDate);
+      if(bd.getFullYear()==y){
+        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;}
+        if(d.status==="Cancelled") cancelled++;
+      }
+    });
+    yearlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`;
+  });
+}
+
+// ---------- DELETE ----------
+function deleteReviewsByMonth(){
+  let m=document.getElementById("reviewMonthSelect").value;
+  let y=document.getElementById("reviewYearSelect").value;
+  if(!confirm("Are you sure?")) return;
+  let deletedCount=0;
+  db.ref("reviews").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.timestamp) return;
+      let reviewDate=new Date(d.timestamp);
+      if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){
+        db.ref("reviews/"+c.key).remove(); deletedCount++;
+      }
+    });
+    document.getElementById("deleteReviewResult").innerHTML=`Deleted Reviews: ${deletedCount}`;
+  });
+}
+
+function deleteBookingsByYear(){
+  let y=document.getElementById("deleteYearSelect").value;
+  if(!confirm("Delete ALL bookings for selected year?")) return;
+  let deletedCount=0;
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.startDate) return;
+      let bookingDate=new Date(d.startDate);
+      if(bookingDate.getFullYear()==y){ db.ref("bookings/"+c.key).remove(); deletedCount++; }
+    });
+    document.getElementById("deleteYearResult").innerHTML=`Deleted Bookings: ${deletedCount}`;
+  });
+}
+
+// ---------- VIP & CUSTOMER ----------
+function loadVIP(){
+  let customerCount={};
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val(); if(!d.phone) return;
+      let key=d.phone;
+      if(!customerCount[key]) customerCount[key]={name:d.name||"Unknown",phone:d.phone,count:0};
+      customerCount[key].count++;
+    });
+    let arr=Object.values(customerCount);
+    arr.sort((a,b)=>b.count-a.count);
+    let top3=arr.slice(0,3); let html="<ol>";
+    top3.forEach(c=>{html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`});
+    html+="</ol>";
+    document.getElementById("vipResult").innerHTML=html;
+  });
+}
+
+function loadCustomerProfile(phone){
+  if(!phone){alert("Phone not found");return;}
+  let totalSpent=0,totalBookings=0,completed=0,cancelled=0; let historyHTML="<h3>Booking History</h3><ul>";
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let d=c.val();
+      if(d.phone===phone){
+        totalBookings++;
+        if(d.status==="Completed"){completed++;totalSpent+=Number(d.finalPrice||0);}
+        if(d.status==="Cancelled") cancelled++;
+        historyHTML+=`<li>${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}</li>`;
+      }
+    });
+    historyHTML+="</ul>";
+    let loyalty="Bronze"; if(totalSpent>5000) loyalty="Silver"; if(totalSpent>15000) loyalty="Gold 👑"; if(totalSpent>30000) loyalty="Platinum 💎";
+    db.ref("customerNotes/"+phone).once("value",noteSnap=>{
+      let tag="None"; if(noteSnap.exists()){tag=noteSnap.val().tag;}
+      document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`;
+    });
+  });
+}
+
+function markBargainer(phone){ 
+  if(!phone){alert("Phone number not found");return;} 
+  firebase.database().ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()}).then(()=>{alert("Customer saved as Bargainer. Next time you will get alert.");});
+}
+
+// ---------- TODAY ANALYTICS ----------
+function loadTodayAnalytics(){
+  const todayKey=new Date().toISOString().split("T")[0];
+  firebase.database().ref("dailyVisitors/"+todayKey).once("value").then(snapshot=>{
+    let totalVisitors=0,bookedCount=0,notBookedCount=0,totalTimeSpent=0;
+    snapshot.forEach(child=>{
+      totalVisitors++;
+      const data=child.val();
+      if(data.booked) bookedCount++; else notBookedCount++;
+      totalTimeSpent+=data.totalTime||0;
+    });
+    document.getElementById("totalVisitors").innerText=totalVisitors;
+    document.getElementById("bookedVisitors").innerText=bookedCount;
+    document.getElementById("notBookedVisitors").innerText=notBookedCount;
+    document.getElementById("totalTimeSpent").innerText=Math.floor(totalTimeSpent/60000)+" Minutes";
+  });
+}
+
+function loadTopVisitors(){
+  const todayKey=new Date().toISOString().split("T")[0];
+  firebase.database().ref("dailyVisitors/"+todayKey).orderByChild("visits").limitToLast(5).once("value").then(snapshot=>{
+    let html="<ol>";
+    snapshot.forEach(child=>{
+      const data=child.val();
+      html+=`<li>${child.key} - ${data.visits} visits</li>`;
+    });
+    html+="</ol>";
+    document.getElementById("topVisitors").innerHTML=html;
+  });
+}
+
+// ---------- GOD-LEVEL AI ----------
+async function sendAI(){
+  const input=document.getElementById("aiInput");
+  const chatBox=document.getElementById("aiChat");
+  let question=input.value.trim(); if(!question) return;
+  addMessage(question,"user"); input.value="";
+
+  const thinking=document.createElement("div");
+  thinking.className="bot msg"; thinking.textContent="AI is thinking...";
+  chatBox.appendChild(thinking); chatBox.scrollTop=chatBox.scrollHeight;
+
+  buildBusinessReport().then(report=>{
+    fetch("https://royal-ai-games.vercel.app/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        message: `You are a God-level business manager for a PlayStation & Xbox rental shop.\nOwner Question:\n${question}\nReal Shop Data:\n${report}\nGive actionable suggestions and commands.`
+      })
+    }).then(res=>res.json())
+    .then(async data=>{
+      thinking.remove();
+      if(data.reply){
+        const finalResp = await handleAICommand(data.reply);
+        addMessage(finalResp,"bot");
+      } else { addMessage("AI did not respond properly","bot"); }
+    }).catch(err=>{thinking.remove(); addMessage("AI Error","bot"); console.error(err);});
+  });
+}
+
+function addMessage(text,sender){
+  const chat=document.getElementById("aiChat");
+  const msg=document.createElement("div");
+  msg.classList.add("msg"); msg.classList.add(sender==="user"?"user":"bot");
+  msg.textContent=text; chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
+}
+
+async function buildBusinessReport(){
+  const bookingSnap=await db.ref("bookings").once("value");
+  const noteSnap=await db.ref("customerNotes").once("value");
+  const visitorSnap=await db.ref("dailyVisitors").once("value");
+  let report="",totalBookings=0,totalRevenue=0,completed=0,cancelled=0,active=0;
+  let bargainCustomers={}; noteSnap.forEach(n=>{if(n.val().tag==="BARGAINER") bargainCustomers[n.key]=true;});
+  bookingSnap.forEach(c=>{
+    const d=c.val(); totalBookings++; totalRevenue+=Number(d.finalPrice||0);
+    if(d.status==="Completed") completed++; if(d.status==="Cancelled") cancelled++; if(d.status==="Active") active++;
+    let bargain=bargainCustomers[d.phone]?"YES":"NO";
+    report+=`\nCustomer: ${d.name}\nPhone: ${d.phone}\nConsole: ${d.console}\nPaid: ₹${d.finalPrice}\nStatus: ${d.status}\nBargainer: ${bargain}\n---------------------`;
+  });
+  let totalVisitors=0,bookedVisitors=0;
+  visitorSnap.forEach(day=>{day.forEach(v=>{totalVisitors++; if(v.val().booked) bookedVisitors++;});});
+  return `===== BUSINESS STATS =====\nTotal Bookings: ${totalBookings}\nRevenue: ₹${totalRevenue}\nCompleted: ${completed}\nCancelled: ${cancelled}\nActive: ${active}\nVisitors: ${totalVisitors}\nConverted Customers: ${bookedVisitors}\n===== CUSTOMER DATA =====\n${report}`;
+}
+
+// AI COMMANDS HANDLER (change bookings, delete, tag)
+async function handleAICommand(replyText){
+  const dbRef=db.ref();
+
+  let match = replyText.match(/Change booking (\w+) status to (\w+)/i);
+  if(match){
+    const [_, bookingID, status]=match;
+    const newStatus=status.charAt(0).toUpperCase()+status.slice(1).toLowerCase();
+    if(SAFE_STATUSES.includes(newStatus)){
+      await dbRef.child(`bookings/${bookingID}`).update({status:newStatus});
+      return `✅ Booking ${bookingID} updated to ${newStatus}`;
+    }
+    return `⚠️ Invalid status: ${status}`;
+  }
+
+  match=replyText.match(/Delete review (\w+)/i);
+  if(match){
+    const reviewID=match[1];
+    await dbRef.child(`reviews/${reviewID}`).remove();
+    return `✅ Review ${reviewID} deleted`;
+  }
+
+  match=replyText.match(/Tag customer (\w+) as BARGAINER/i);
+  if(match){
+    const phone=match[1];
+    await dbRef.child(`customerNotes/${phone}`).set({tag:"BARGAINER",timestamp:Date.now()});
+    return `✅ Customer ${phone} tagged as BARGAINER`;
+  }
+
+  if(/show me visitors who didn’t book/i.test(replyText)){
+    const todayKey=new Date().toISOString().split("T")[0];
+    const snap=await dbRef.child(`dailyVisitors/${todayKey}`).once("value");
+    let nonBookers=[];
+    snap.forEach(child=>{if(!child.val().booked) nonBookers.push(child.key);});
+    return `Visitors who didn’t book today: ${nonBookers.join(", ")||"None"}`;
+  }
+
+  return replyText;
+}
+
+// ENTER KEY SEND AI
+window.addEventListener("load", function(){
+  document.getElementById("aiInput").addEventListener("keydown", func
+
+
+
+
 
 </script>
 </body>
