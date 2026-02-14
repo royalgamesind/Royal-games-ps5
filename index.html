@@ -628,39 +628,71 @@ document.getElementById("topVisitors").innerHTML = html;
 
 });
 }
-  async function sendAI(){
+  
+function sendAI(){
 
-let input=document.getElementById("aiInput");
-let question=input.value.trim();
+const input = document.getElementById("aiInput");
+const chatBox = document.getElementById("chatBox");
+
+let question = input.value.trim();
 if(!question) return;
 
+// user message
 addMessage(question,"user");
 input.value="";
 
-addMessage("Thinking...","ai");
+// thinking message
+const thinking = document.createElement("div");
+thinking.className="ai";
+thinking.innerText="Thinking...";
+chatBox.appendChild(thinking);
+chatBox.scrollTop = chatBox.scrollHeight;
 
-let report = await buildBusinessReport();
+// IMPORTANT: wait for firebase report
+buildBusinessReport().then(report=>{
 
-try{
-
-const res=await fetch("https://royal-ai-games.vercel.app/api/chat",{
+fetch("https://royal-ai-games.vercel.app/api/chat",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
-question: question,
-report: report
+message: `
+You are a business analyst for a PlayStation & Xbox rental shop.
+
+Owner Question:
+${question}
+
+Real Shop Data:
+${report}
+
+Give clear advice and suggestions to grow bookings and profit.
+`
 })
+})
+.then(res=>res.json())
+.then(data=>{
+
+thinking.remove();
+
+if(data.reply){
+addMessage(data.reply,"ai");
+}else{
+addMessage("AI did not respond properly","ai");
+}
+
+})
+.catch(err=>{
+thinking.innerText="Server connection error";
+console.log(err);
 });
 
-const data=await res.json();
+});
 
-document.getElementById("chatBox").lastChild.remove();
-addMessage(data.reply || "No response","ai");
-
-}catch{
-document.getElementById("chatBox").lastChild.innerText="AI server offline.";
 }
-  }
+
+  
+  
   
   
   
