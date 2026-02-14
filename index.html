@@ -754,6 +754,35 @@ let box=document.getElementById("chatBox");
 box.appendChild(div);
 box.scrollTop=box.scrollHeight;
   }
+  async function buildBusinessReport(){
+
+  const snap = await db.ref("bookings").once("value");
+
+  let totalBookings = 0;
+  let totalRevenue = 0;
+  let active = 0;
+  let completed = 0;
+  let cancelled = 0;
+
+  snap.forEach(c=>{
+    const d = c.val();
+    totalBookings++;
+
+    totalRevenue += Number(d.finalPrice || 0);
+
+    if(d.status==="Active") active++;
+    if(d.status==="Completed") completed++;
+    if(d.status==="Cancelled") cancelled++;
+  });
+
+  return `
+Total bookings: ${totalBookings}
+Total revenue: ₹${totalRevenue}
+Active bookings: ${active}
+Completed bookings: ${completed}
+Cancelled bookings: ${cancelled}
+`;
+  }
   
   
   
