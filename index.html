@@ -26,50 +26,7 @@ th{color:#facc15}
 #loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
 display:flex;align-items:center;justify-content:center;z-index:9999}
 
-/* CHATGPT STYLE CHAT */
-#aiChat{
-height:420px;
-overflow-y:auto;
-background:#0b1020;
-padding:18px;
-border-radius:18px;
-display:flex;
-flex-direction:column;
-gap:12px;
-scroll-behavior:smooth;
-}
 
-/* common message */
-.msg{
-  max-width:75%;
-  padding:12px 14px;
-  border-radius:18px;
-  font-size:14px;
-  line-height:1.4;
-  word-wrap:break-word;
-  animation:fade .25s ease;
-}
-
-/* USER message (right) */
-.user{
-  align-self:flex-end;
-  background:#facc15;
-  color:#000;
-  border-bottom-right-radius:5px;
-}
-
-/* AI message (left) */
-.bot{
-  align-self:flex-start;
-  background:#1f2937;
-  color:#fff;
-  border-bottom-left-radius:5px;
-}
-
-@keyframes fade{
-  from{opacity:0; transform:translateY(8px);}
-  to{opacity:1; transform:translateY(0);}
-}
 </style>
 </head>
 <body>
@@ -170,15 +127,7 @@ Select a customer to view profile
 <div id="deleteReviewResult"></div>
 </div>
 
-<!-- AI CHAT -->
-<div class="section card">
-<h2>🤖 Royal AI Assistant</h2>
-<div id="aiChat"></div>
-<div style="display:flex;gap:10px;margin-top:10px;">
-<input id="aiInput" type="text" placeholder="Ask about business or general questions..." style="flex:1;background:#1f2937;color:white">
-<button onclick="sendAI()">Send</button>
-</div>
-</div>
+
 
 <script>
 // FIREBASE CONFIG
@@ -473,46 +422,8 @@ function loadTopVisitors(){
   }); 
 }
 
-// ---------- AI CHAT ----------
-  async function sendAI() {
-  const input = document.getElementById("aiInput");
-  const message = input.value.trim();
-  if(!message) return;
 
-  addMessage(message, "user");
-  input.value = "";
 
-  const chatBox = document.getElementById("aiChat");
-  const thinking = document.createElement("div");
-  thinking.className = "bot msg";
-  thinking.textContent = "AI is thinking...";
-  chatBox.appendChild(thinking);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: message })
-    });
-    const data = await response.json();
-    thinking.remove();
-    addMessage(data.reply || "No reply received.", "bot");
-  } catch (err) {
-    thinking.remove();
-    addMessage("Error contacting AI.", "bot");
-    console.error(err);
-  }
-}
-
-function addMessage(text, sender) {
-  const chat = document.getElementById("aiChat");
-  const msg = document.createElement("div");
-  msg.classList.add("msg", sender === "user" ? "user" : "bot");
-  msg.textContent = text;
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-  }
     
 
   
@@ -525,88 +436,15 @@ function addMessage(text, sender) {
   
 
 
-function addMessage(text,sender){
-  const chat=document.getElementById("aiChat");
-  const msg=document.createElement("div");
-  msg.classList.add("msg");
-  msg.classList.add(sender==="user"?"user":"bot");
-  msg.textContent=text; chat.appendChild(msg); chat.scrollTop=chat.scrollHeight;
-}
 
-async function buildBusinessReport(){
-  const bookingSnap=await db.ref("bookings").once("value");
-  const noteSnap=await db.ref("customerNotes").once("value");
-  const visitorSnap=await db.ref("dailyVisitors").once("value");
-  let report="",totalBookings=0,totalRevenue=0,completed=0,cancelled=0,active=0;
-  let bargainCustomers={}; noteSnap.forEach(n=>{if(n.val().tag==="BARGAINER") bargainCustomers[n.key]=true;});
-  bookingSnap.forEach(c=>{
-    const d=c.val(); totalBookings++; totalRevenue+=Number(d.finalPrice||0);
-    if(d.status==="Completed") completed++; if(d.status==="Cancelled") cancelled++; if(d.status==="Active") active++;
-    let bargain=bargainCustomers[d.phone]?"YES":"NO";
-    report+=`\nCustomer: ${d.name}\nPhone: ${d.phone}\nConsole: ${d.console}\nPaid: ₹${d.finalPrice}\nStatus: ${d.status}\nBargainer: ${bargain}\n---------------------`;
-  });
-  let totalVisitors=0,bookedVisitors=0;
-  visitorSnap.forEach(day=>{day.forEach(v=>{totalVisitors++; if(v.val().booked) bookedVisitors++;});});
-  return `===== BUSINESS STATS =====\nTotal Bookings: ${totalBookings}\nRevenue: ₹${totalRevenue}\nCompleted: ${completed}\nCancelled: ${cancelled}\nActive: ${active}\nVisitors: ${totalVisitors}\nConverted Customers: ${bookedVisitors}\n===== CUSTOMER DATA =====\n${report}`;
-}
 
-async function handleAICommand(replyText){
-    const dbRef = db.ref();
-    let match;
-
-    // Change booking status
-    match = replyText.match(/Change booking (\w+) status to (\w+)/i);
-    if(match){
-        const [_, bookingID, status] = match;
-        const newStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-        if(SAFE_STATUSES.includes(newStatus)){
-            await dbRef.child(`bookings/${bookingID}`).update({status:newStatus});
-            return `✅ Booking ${bookingID} updated to ${newStatus}`;
-        }
-        return `⚠️ Invalid status: ${status}`;
-    }
-
-    // Delete review
-    match = replyText.match(/Delete review (\w+)/i);
-    if(match){
-        const reviewID = match[1];
-        await dbRef.child(`reviews/${reviewID}`).remove();
-        return `✅ Review ${reviewID} deleted`;
-    }
 
     
 
 
  
 
-  // Tag Bargainer
-  match = replyText.match(/Tag customer (\w+) as BARGAINER/i);
-  if(match){
-    const phone = match[1];
-    await dbRef.child(`customerNotes/${phone}`).set({tag:"BARGAINER", timestamp:Date.now()});
-    return `✅ Customer ${phone} tagged as BARGAINER`;
-  }
 
-  // Show visitors who didn’t book
-  if(/show me visitors who didn’t book/i.test(replyText)){
-    const todayKey = new Date().toISOString().split("T")[0];
-    const snap = await dbRef.child(`dailyVisitors/${todayKey}`).once("value");
-    let nonBookers = [];
-    snap.forEach(child => { if(!child.val().booked) nonBookers.push(child.key); });
-    return `Visitors who didn’t book today: ${nonBookers.join(", ") || "None"}`;
-  }
-
-  return replyText;
-}
-
-window.addEventListener("load", function(){
-  document.getElementById("aiInput").addEventListener("keydown", function(e){
-    if(e.key==="Enter" && !e.shiftKey){
-      e.preventDefault();
-      sendAI();
-    }
-  });
-});
   
 
 
