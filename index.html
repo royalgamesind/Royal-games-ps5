@@ -3,335 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Royal Games | Command Center 2026</title>
-
+    <title>Royal Intelligence | JARVIS OS</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
+        window.AI_CORE = pipeline;
+    </script>
 
     <style>
-        :root {
-            --bg: #05070a;
-            --card-bg: rgba(17, 24, 39, 0.9);
-            --accent: #facc15; /* Gold */
-            --ps-blue: #00439c;
-            --xb-green: #107c10;
-            --danger: #ef4444;
-            --glass: rgba(255, 255, 255, 0.05);
+        :root { --bg: #010409; --accent: #00d2ff; --neon: #00f2ff; --glass: rgba(10, 25, 47, 0.8); }
+        body { background: #010409; color: #e2e8f0; font-family: 'Space Grotesk', sans-serif; margin: 0; padding: 20px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1400px; margin: 0 auto; }
+        .card { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(0, 210, 255, 0.1); border-radius: 25px; padding: 25px; }
+
+        /* JARVIS Interface */
+        .jarvis-main { grid-column: span 4; text-align: center; padding: 40px; }
+        .orb { 
+            width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, var(--neon) 0%, transparent 70%);
+            box-shadow: 0 0 30px var(--neon); margin: 0 auto 20px; cursor: pointer; position: relative;
         }
+        .orb.thinking { animation: shake 0.2s infinite; filter: hue-rotate(180deg); }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, -1px); } }
 
-        body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff;
-            background-image: radial-gradient(circle at top right, #1e1b4b, #05070a);
-            padding-bottom: 50px;
-        }
+        .ai-status { font-style: italic; color: var(--accent); margin-bottom: 20px; height: 24px; }
+        .cmd-bar { display: flex; gap: 10px; max-width: 600px; margin: 0 auto; }
+        input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--accent); border-radius: 12px; color: #fff; padding: 12px; }
+        button { background: var(--accent); border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        .container { max-width: 1300px; margin: 0 auto; padding: 20px; }
-
-        /* --- STAT CARDS --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-        .stat-card { 
-            background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--glass);
-            text-align: center; backdrop-filter: blur(10px); transition: 0.3s;
-        }
-        .stat-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .stat-card h3 { font-size: 0.8rem; text-transform: uppercase; color: #9ca3af; margin-bottom: 10px; }
-        .stat-card p { font-size: 1.8rem; font-weight: bold; margin: 0; color: var(--accent); }
-
-        /* --- UI CARDS --- */
-        .card { background: var(--card-bg); border-radius: 24px; padding: 25px; margin-top: 25px; border: 1px solid var(--glass); }
-        h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-
-        /* --- TABLES --- */
-        .table-box { overflow-x: auto; max-height: 400px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: var(--accent); border-bottom: 2px solid var(--glass); }
-        td { padding: 12px 15px; border-bottom: 1px solid var(--glass); font-size: 0.9rem; }
-        tr:hover { background: rgba(255,255,255,0.03); }
-
-        /* --- BUTTONS & INPUTS --- */
-        input, select { background: #1f2937; border: 1px solid var(--glass); color: white; padding: 12px; border-radius: 10px; }
-        button { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        button.danger { background: var(--danger); color: white; }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; }
-        .badge-active { background: var(--ps-blue); }
-        .badge-completed { background: var(--xb-green); }
-        .badge-cancelled { background: #374151; }
-
-        #loginBox { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        /* Tables & Stats */
+        .stat-box { border-left: 4px solid var(--accent); }
+        .stat-val { font-size: 2rem; font-weight: bold; margin-top: 10px; }
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        th { text-align: left; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid #333; }
+        td { padding: 12px 0; border-bottom: 1px solid #222; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div id="loginBox">
-    <div class="card" style="width:320px; text-align:center; border:2px solid var(--accent)">
-        <h2 style="justify-content:center">👑 ROYAL ADMIN</h2>
-        <input type="password" id="adminPass" placeholder="Access Key" style="width:90%">
-        <button onclick="checkPassword()" style="width:100%; margin-top:15px">INITIALIZE</button>
-        <p id="loginError" style="color:var(--danger)"></p>
-    </div>
-</div>
-
-<div class="container">
-    <div style="text-align:center; padding: 20px 0;">
-        <h1 style="color:var(--accent); letter-spacing:5px;">ROYAL GAMES DASHBOARD</h1>
-        <p id="liveTime" style="color:#9ca3af"></p>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card"><h3>Active Rentals</h3><p id="statActive">0</p></div>
-        <div class="stat-card"><h3>10-Day Revenue</h3><p id="statRevenue">₹0</p></div>
-        <div class="stat-card"><h3>Today Visitors</h3><p id="totalVisitors">0</p></div>
-        <div class="stat-card"><h3>Booked vs Not</h3><p><span id="bookedVisitors" style="color:var(--xb-green)">0</span> / <span id="notBookedVisitors" style="color:var(--danger)">0</span></p></div>
-    </div>
-
-    <div class="card">
-        <h2><i class="fas fa-search"></i> Universal Search</h2>
-        <div style="display:flex; gap:10px">
-            <input type="text" id="searchBox" placeholder="Search Name, ID or Phone..." style="flex:1" onkeyup="searchBooking()">
-            <button onclick="searchBooking()">SEARCH</button>
-        </div>
-        <div class="table-box" style="margin-top:15px">
-            <table id="searchTable"></table>
+<div class="grid">
+    <div class="card jarvis-main">
+        <div id="orb" class="orb" onclick="JARVIS.boot()"></div>
+        <div id="aiStatus" class="ai-status">INITIALIZE NEURAL LINK</div>
+        <div class="cmd-bar">
+            <input type="text" id="aiMsg" placeholder="Talk to JARVIS...">
+            <button onclick="JARVIS.handleCommand()">SEND</button>
+            <button style="background: #00439c; color: white;" onclick="JARVIS.listen()"><i class="fas fa-microphone"></i></button>
         </div>
     </div>
 
-    <div class="card">
-        <h2><i class="fas fa-bolt"></i> Recent 5 Bookings</h2>
-        <div class="table-box">
-            <table id="recentTable"></table>
-        </div>
+    <div class="card stat-box">
+        <div>Total Revenue</div>
+        <div class="stat-val" id="totalRev">₹0</div>
+    </div>
+    <div class="card stat-box" style="border-color: #0070f3;">
+        <div>PS5 Income</div>
+        <div class="stat-val" id="psIncome">₹0</div>
+    </div>
+    <div class="card stat-box" style="border-color: #107c10;">
+        <div>Xbox Income</div>
+        <div class="stat-val" id="xbIncome">₹0</div>
+    </div>
+    <div class="card stat-box" style="border-color: #facc15;">
+        <div>Memories</div>
+        <div class="stat-val" id="memCount">0</div>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px">
-        <div class="card">
-            <h2><i class="fas fa-chart-pie"></i> Financial Audits</h2>
-            <div style="display:flex; gap:10px; margin-bottom:15px">
-                <select id="monthSelect"></select>
-                <select id="yearSelect"></select>
-                <button onclick="calculateMonthly()">CHECK MONTH</button>
-            </div>
-            <div id="monthlyResult" style="padding:15px; background:var(--glass); border-radius:10px; color:var(--accent)">Results will appear here...</div>
-            
-            <h4 style="margin-top:20px">Yearly Summary</h4>
-            <div style="display:flex; gap:10px">
-                <select id="yearOnlySelect"></select>
-                <button onclick="calculateYearly()">CHECK YEAR</button>
-            </div>
-            <div id="yearlyResult" style="margin-top:10px; color:var(--accent)"></div>
-        </div>
-
-        <div class="card">
-            <h2><i class="fas fa-crown"></i> VIP & Profiles</h2>
-            <button onclick="loadVIP()" style="width:100%">LOAD TOP 3 VIP</button>
-            <div id="vipResult" style="margin-top:15px"></div>
-            <hr style="border:0; border-top:1px solid var(--glass); margin:20px 0">
-            <h3>Customer Scout</h3>
-            <div id="customerProfile" style="color:#9ca3af; font-size:0.8rem">Click a name in tables to scan profile.</div>
-        </div>
+    <div class="card" style="grid-column: span 2;">
+        <h3>Revenue Trend</h3>
+        <canvas id="revChart" height="150"></canvas>
+    </div>
+    <div class="card" style="grid-column: span 2;">
+        <h3>Console Split</h3>
+        <canvas id="consoleChart" height="150"></canvas>
     </div>
 
-    <div class="card" style="border-color:rgba(239, 68, 68, 0.3)">
-        <h2 style="color:var(--danger)"><i class="fas fa-exclamation-triangle"></i> Cleanup Terminal</h2>
-        <div style="display:flex; gap:20px; flex-wrap:wrap">
-            <div>
-                <p>Delete Bookings by Year</p>
-                <select id="deleteYearSelect"></select>
-                <button class="danger" onclick="deleteBookingsByYear()">WIPE YEAR</button>
-            </div>
-            <div>
-                <p>Delete Reviews by Month</p>
-                <select id="reviewMonthSelect"></select>
-                <select id="reviewYearSelect"></select>
-                <button class="danger" onclick="deleteReviewsByMonth()">WIPE REVIEWS</button>
-            </div>
-        </div>
-        <div id="deleteYearResult" style="margin-top:10px"></div>
-        <div id="deleteReviewResult"></div>
+    <div class="card" style="grid-column: span 4;">
+        <h3>Recent Transactions</h3>
+        <table>
+            <thead><tr><th>User</th><th>Console</th><th>Amount</th><th>Date</th></tr></thead>
+            <tbody id="logBody"></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-// --- INITIALIZATION ---
-const firebaseConfig = {
-    apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-    authDomain: "royalgamesproject.firebaseapp.com",
-    databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "royalgamesproject"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    // 1. FIREBASE SETUP
+    const firebaseConfig = {
+        databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-function checkPassword(){
-    if(document.getElementById("adminPass").value.trim() === "Royal@2026"){
-        document.getElementById("loginBox").style.display="none";
-        autoCompleteBookings();
-        loadRecent();
-        populateSelectors();
-        loadTodayAnalytics();
-        loadTopVisitors();
-        setInterval(() => { document.getElementById('liveTime').innerText = new Date().toLocaleString(); }, 1000);
-    } else {
-        document.getElementById("loginError").innerText="WRONG KEY";
-    }
-}
+    // 2. JARVIS ENGINE
+    const JARVIS = {
+        brain: null,
+        isBooted: false,
+        memory: JSON.parse(localStorage.getItem('JARVIS_MEM')) || {},
 
-// --- YOUR ORIGINAL CORE FUNCTIONS (OPTIMIZED) ---
+        async boot() {
+            const status = document.getElementById("aiStatus");
+            const orb = document.getElementById("orb");
+            orb.classList.add("thinking");
+            status.innerText = "LOADING BRAIN (WebGPU)...";
 
-function rowHTML(id, d) {
-    let status = d.status || "Active";
-    let badgeClass = `badge-${status.toLowerCase()}`;
-    return `<tr>
-        <td>${id.slice(-5)}</td>
-        <td><a href="#" onclick="loadCustomerProfile('${d.phone}')" style="color:var(--accent); text-decoration:none; font-weight:bold">${d.name}</a></td>
-        <td>${d.console}</td>
-        <td>${d.startDate}</td>
-        <td>₹${d.finalPrice}</td>
-        <td><span class="badge ${badgeClass}">${status}</span></td>
-        <td>
-            ${status === "Cancelled" ? `<button onclick="restoreBooking('${id}')">Restore</button>` : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`}
-            <button onclick="markBargainer('${d.phone}')" style="background:orange; font-size:10px">⚠️ FLAG</button>
-            <button class="danger" style="padding:5px" onclick="deleteBooking('${id}')"><i class="fas fa-trash"></i></button>
-        </td>
-    </tr>`;
-}
-
-function loadRecent(){
-    db.ref("bookings").limitToLast(5).on("value", snap => {
-        let html = `<tr><th>ID</th><th>Name</th><th>Console</th><th>Date</th><th>Price</th><th>Status</th><th>Actions</th></tr>`;
-        let active = 0;
-        snap.forEach(c => { 
-            html += rowHTML(c.key, c.val()); 
-            if(c.val().status === "Active") active++;
-        });
-        document.getElementById("recentTable").innerHTML = html;
-        document.getElementById("statActive").innerText = active;
-        calculate10DayRev();
-    });
-}
-
-function calculate10DayRev(){
-    let total = 0;
-    let today = new Date();
-    db.ref("bookings").once("value", snap => {
-        snap.forEach(c => {
-            let d = c.val();
-            if(d.status !== "Completed") return;
-            let end = new Date(d.startDate);
-            end.setDate(end.getDate() + Number(d.days || 0));
-            let diff = (today - end) / (1000 * 60 * 60 * 24);
-            if(diff <= 10 && diff >= 0) total += Number(d.finalPrice || 0);
-        });
-        document.getElementById("statRevenue").innerText = "₹" + total;
-    });
-}
-
-// All other functions (Search, VIP, Monthly, Delete) remain as per your logic
-function searchBooking(){
-    let val = document.getElementById("searchBox").value.toLowerCase();
-    db.ref("bookings").once("value", snap => {
-        let html = `<tr><th>ID</th><th>Name</th><th>Console</th><th>Date</th><th>Price</th><th>Status</th><th>Actions</th></tr>`;
-        snap.forEach(c => {
-            let d = c.val();
-            if(c.key.toLowerCase().includes(val) || (d.name||"").toLowerCase().includes(val) || (d.phone||"").includes(val)){
-                html += rowHTML(c.key, d);
+            try {
+                this.brain = await window.AI_CORE('text-generation', 'HuggingFaceTB/SmolLM2-1.7B-Instruct', { device: 'webgpu' });
+                this.isBooted = true;
+                orb.classList.remove("thinking");
+                this.speak("Systems online. I've synced the database, Sir.");
+                status.innerText = "JARVIS: Online & Ready.";
+                this.updateMemCount();
+            } catch (e) {
+                status.innerText = "ERROR: Local AI requires WebGPU.";
             }
-        });
-        document.getElementById("searchTable").innerHTML = html;
-    });
-}
+        },
 
-function loadVIP(){
-    let customerCount = {};
-    db.ref("bookings").once("value", snap => {
-        snap.forEach(c => {
-            let d = c.val(); if(!d.phone) return;
-            if(!customerCount[d.phone]) customerCount[d.phone] = {name: d.name, count: 0};
-            customerCount[d.phone].count++;
-        });
-        let arr = Object.values(customerCount).sort((a,b) => b.count - a.count).slice(0,3);
-        let h = "<ol>";
-        arr.forEach(x => h += `<li><b>${x.name}</b>: ${x.count} bookings</li>`);
-        document.getElementById("vipResult").innerHTML = h + "</ol>";
-    });
-}
+        async handleCommand(voiceIn = null) {
+            if(!this.isBooted) return this.boot();
+            const query = voiceIn || document.getElementById("aiMsg").value;
+            const orb = document.getElementById("orb");
+            const status = document.getElementById("aiStatus");
 
-function loadCustomerProfile(phone){
-    let spent = 0, count = 0;
-    db.ref("bookings").once("value", snap => {
-        snap.forEach(c => {
-            let d = c.val();
-            if(d.phone === phone) { count++; if(d.status === "Completed") spent += Number(d.finalPrice); }
-        });
-        document.getElementById("customerProfile").innerHTML = `
-            <div style="background:var(--glass); padding:10px; border-radius:8px">
-                <p><b>Phone:</b> ${phone}</p>
-                <p><b>Visits:</b> ${count}</p>
-                <p><b>Total Spent:</b> ₹${spent}</p>
-                <p><b>Status:</b> ${spent > 15000 ? 'GOLD 👑' : 'REGULAR'}</p>
-            </div>
-        `;
-    });
-}
+            orb.classList.add("thinking");
+            
+            // Memory Learning
+            if(query.toLowerCase().includes("remember")) {
+                this.memory[`fact_${Date.now()}`] = query.replace("remember", "").trim();
+                localStorage.setItem('JARVIS_MEM', JSON.stringify(this.memory));
+                this.updateMemCount();
+            }
 
-function populateSelectors(){
-    const mS = document.getElementById("monthSelect");
-    const rMS = document.getElementById("reviewMonthSelect");
-    for(let i=1; i<=12; i++){ 
-        let opt = `<option value="${i}">${i}</option>`;
-        mS.innerHTML += opt; rMS.innerHTML += opt;
+            const context = `Revenue: ${document.getElementById("totalRev").innerText}. Memory: ${JSON.stringify(this.memory)}`;
+            const prompt = `<|im_start|>system\nYou are JARVIS, a witty friend. Context: ${context}. Keep it under 25 words.<|im_start|>user\n${query}<|im_end|>\n<|im_start|>assistant`;
+
+            const out = await this.brain(prompt, { max_new_tokens: 50, temperature: 0.7 });
+            const response = out[0].generated_text.split('<|im_start|>assistant')[1].trim();
+
+            this.speak(response);
+            status.innerText = "JARVIS: " + response;
+            orb.classList.remove("thinking");
+            document.getElementById("aiMsg").value = "";
+        },
+
+        speak(text) {
+            const m = new SpeechSynthesisUtterance(text);
+            m.pitch = 0.9; window.speechSynthesis.speak(m);
+        },
+
+        listen() {
+            const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            rec.onresult = (e) => this.handleCommand(e.results[0][0].transcript);
+            rec.start();
+        },
+
+        updateMemCount() {
+            document.getElementById("memCount").innerText = Object.keys(this.memory).length;
+        }
+    };
+
+    // 3. DATA ENGINE (Your Functions)
+    let charts = {};
+    function sync() {
+        db.ref("bookings").on("value", snap => {
+            const data = snap.val() || {};
+            let stats = { total: 0, ps: 0, xb: 0, daily: {} };
+            const body = document.getElementById("logBody");
+            body.innerHTML = "";
+
+            Object.values(data).reverse().forEach(b => {
+                const p = Number(b.finalPrice || 0);
+                stats.total += p;
+                if(b.console.includes("PS5")) stats.ps += p; else stats.xb += p;
+                stats.daily[b.startDate] = (stats.daily[b.startDate] || 0) + p;
+                
+                body.innerHTML += `<tr><td>${b.customerName}</td><td>${b.console}</td><td>₹${p}</td><td>${b.startDate}</td></tr>`;
+            });
+
+            document.getElementById("totalRev").innerText = "₹" + stats.total;
+            document.getElementById("psIncome").innerText = "₹" + stats.ps;
+            document.getElementById("xbIncome").innerText = "₹" + stats.xb;
+            updateCharts(stats);
+        });
     }
-    const years = [document.getElementById("yearSelect"), document.getElementById("yearOnlySelect"), document.getElementById("reviewYearSelect"), document.getElementById("deleteYearSelect")];
-    for(let y=2026; y>=2024; y--){
-        years.forEach(sel => sel.innerHTML += `<option value="${y}">${y}</option>`);
+
+    function updateCharts(s) {
+        const ctx1 = document.getElementById('revChart').getContext('2d');
+        if(charts.rev) charts.rev.destroy();
+        charts.rev = new Chart(ctx1, {
+            type: 'line',
+            data: { labels: Object.keys(s.daily), datasets: [{ label: 'Daily', data: Object.values(s.daily), borderColor: '#00d2ff', tension: 0.4 }] },
+            options: { maintainAspectRatio: false }
+        });
+
+        const ctx2 = document.getElementById('consoleChart').getContext('2d');
+        if(charts.con) charts.con.destroy();
+        charts.con = new Chart(ctx2, {
+            type: 'doughnut',
+            data: { labels: ['PS5', 'Xbox'], datasets: [{ data: [s.ps, s.xb], backgroundColor: ['#0070f3', '#107c10'] }] },
+            options: { maintainAspectRatio: false }
+        });
     }
-}
 
-// --- ANALYTICS ---
-function loadTodayAnalytics(){
-    const todayKey = new Date().toISOString().split("T")[0];
-    db.ref("dailyVisitors/"+todayKey).on("value", snap => {
-        let total = 0, booked = 0, not = 0;
-        snap.forEach(c => {
-            total++; if(c.val().booked) booked++; else not++;
-        });
-        document.getElementById("totalVisitors").innerText = total;
-        document.getElementById("bookedVisitors").innerText = booked;
-        document.getElementById("notBookedVisitors").innerText = not;
-    });
-}
-
-// Standard handlers
-function cancelBooking(id){ if(confirm("Cancel?")) db.ref("bookings/"+id).update({status:"Cancelled"}); }
-function restoreBooking(id){ db.ref("bookings/"+id).update({status:"Active"}); }
-function deleteBooking(id){ if(confirm("Delete?")) db.ref("bookings/"+id).remove(); }
-function markBargainer(phone){ db.ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()}); alert("Flagged!"); }
-function autoCompleteBookings(){
-    let today = new Date();
-    db.ref("bookings").once("value", snap => {
-        snap.forEach(c => {
-            let d = c.val();
-            if(!d.startDate || d.status === "Cancelled" || d.status === "Completed") return;
-            let end = new Date(d.startDate);
-            end.setDate(end.getDate() + Number(d.days));
-            if(today > end) db.ref("bookings/"+c.key).update({status: "Completed"});
-        });
-    });
-}
-
-// Financial calculations (Reusing your logic)
-function calculateMonthly(){
-    let m = monthSelect.value, y = yearSelect.value, rev = 0;
-    db.ref("bookings").once("value", snap => {
-        snap.forEach(c => {
-            let d = c.val(); if(!d.startDate) return;
-            let bd = new Date(d.startDate);
-            if((bd.getMonth()+1) == m && bd.getFullYear() == y && d.status === "Completed") rev += Number(d.finalPrice);
-        });
-        document.getElementById("monthlyResult").innerText = `Revenue for ${m}/${y}: ₹${rev}`;
-    });
-}
-// Include calculateYearly, deleteBookingsByYear, deleteReviewsByMonth following same pattern as above...
+    sync();
 </script>
 </body>
 </html>
@@ -340,10 +220,5 @@ function calculateMonthly(){
 
 
 
-          
-
-
-
-
-  
-  
+                                        let total = 0, booked = 0, not = 0;
+        
