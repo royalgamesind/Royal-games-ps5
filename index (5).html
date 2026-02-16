@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal Games Admin - God-Level AI</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body{margin:0;font-family:Segoe UI;background:#0b0f1a;color:#fff;padding:20px}
+h1{text-align:center;color:gold}
+.section{margin-top:30px}
+.card{background:#111827;padding:20px;border-radius:18px;margin-top:15px;box-shadow:0 0 15px rgba(255,215,0,.08)}
+input,select,button{padding:10px;border-radius:8px;border:none;margin:5px 0}
+input,select{background:#1f2937;color:#fff}
+button{background:gold;color:#000;font-weight:bold;cursor:pointer}
+button.danger{background:#e53935;color:#fff}
+button.delete{background:#6b7280;color:#fff}
+.table-box{max-height:260px;overflow-y:auto;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:left}
+th{color:#facc15}
+#loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
+display:flex;align-items:center;justify-content:center;z-index:9999}
+
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN BOX -->
+<div id="loginBox">
+<div style="background:#111827;padding:40px;border-radius:20px;width:320px;text-align:center;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.3)">
+<h2 style="color:gold">👑 Royal Admin</h2>
+<input type="password" id="adminPass" placeholder="Enter Password" style="width:100%">
+<button onclick="checkPassword()" style="width:100%">Login</button>
+<p id="loginError" style="color:#f87171"></p>
+</div>
+</div>
+
+<h1>Royal Games Dashboard</h1>
+
+<!-- SEARCH BOOKING -->
+<div class="section card">
+<h2>Search Booking</h2>
+<input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
+<button onclick="searchBooking()">Search</button>
+<div class="table-box">
+<table id="searchTable"></table>
+</div>
+</div>
+
+<!-- RECENT BOOKINGS -->
+<div class="section card">
+<h2>Recent 5 Bookings</h2>
+<div class="table-box">
+<table id="recentTable"></table>
+</div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section card">
+<h2>📊 Today Website Analytics</h2>
+<p>Total Visitors: <b><span id="totalVisitors">0</span></b></p>
+<p>Booked Visitors: <b><span id="bookedVisitors">0</span></b></p>
+<p>Not Booked: <b><span id="notBookedVisitors">0</span></b></p>
+<p>Total Time Spent: <b><span id="totalTimeSpent">0</span></b></p>
+<h3>Top 5 Repeat Visitors</h3>
+<div id="topVisitors"></div>
+</div>
+
+<!-- VIP CUSTOMERS -->
+<div class="section card">
+<h2>Top 3 VIP Customers</h2>
+<button onclick="loadVIP()">Show VIP</button>
+<div id="vipResult"></div>
+</div>
+
+<!-- CUSTOMER PROFILE -->
+<div class="section card">
+<h2>Customer Profile</h2>
+<div id="customerProfile">
+Select a customer to view profile
+</div>
+</div>
+
+<!-- LAST 10 DAYS PERFORMANCE -->
+<div class="section card">
+<h2>Last 10 Days Performance</h2>
+<div id="tenDaysData"></div>
+</div>
+
+<!-- MONTHLY PERFORMANCE -->
+<div class="section card">
+<h2>Monthly Performance</h2>
+<select id="monthSelect"></select>
+<select id="yearSelect"></select>
+<button onclick="calculateMonthly()">Check</button>
+<div id="monthlyResult"></div>
+</div>
+
+<!-- YEARLY PERFORMANCE -->
+<div class="section card">
+<h2>Yearly Performance</h2>
+<select id="yearOnlySelect"></select>
+<button onclick="calculateYearly()">Check</button>
+<div id="yearlyResult"></div>
+</div>
+
+<!-- DELETE BOOKINGS BY YEAR -->
+<div class="section card">
+<h2>Delete Bookings By Year</h2>
+<select id="deleteYearSelect"></select>
+<button class="danger" onclick="deleteBookingsByYear()">Delete Year</button>
+<div id="deleteYearResult"></div>
+</div>
+
+<!-- DELETE REVIEWS BY MONTH -->
+<div class="section card">
+<h2>Delete Reviews By Month</h2>
+<select id="reviewMonthSelect"></select>
+<select id="reviewYearSelect"></select>
+<button onclick="deleteReviewsByMonth()">Delete Reviews</button>
+<div id="deleteReviewResult"></div>
+</div>
+
+
+
+<script>
+// FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
+  authDomain: "royalgamesproject.firebaseapp.com",
+  databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "royalgamesproject",
+  storageBucket: "royalgamesproject.appspot.com",
+  messagingSenderId: "1008609758558",
+  appId: "1:1008609758558:web:7aa12cdef2b066ad7393cf"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const SAFE_STATUSES = ["Active","Completed","Cancelled"];
+
+// ---------- LOGIN ----------
+function checkPassword(){
+  if(document.getElementById("adminPass").value.trim() === "Royal@2026"){
+    document.getElementById("loginBox").style.display="none";
+    try {
+      autoCompleteBookings();
+      loadRecent();
+      tenDays();
+      populateSelectors();
+      loadTodayAnalytics();
+      loadTopVisitors();
+    } catch(err){
+      console.error("Dashboard Load Error:", err);
+      alert("Error loading dashboard. Check console for details.");
+    }
+    document.getElementById("aiInput").addEventListener("keypress", function(e){
+      if(e.key==="Enter") sendAI();
+    });
+  } else {
+    document.getElementById("loginError").innerText="Wrong Password";
+  }
+}
+
+// ---------- AUTO COMPLETE BOOKINGS ----------
+function autoCompleteBookings(){
+  let today=new Date();
+  db.ref("bookings").once("value",snap=>{
+    snap.forEach(c=>{
+      let id=c.key;
+      let d=c.val();
+      if(!d.startDate||!d.days) return;
+      if(d.status==="Cancelled") return;
+      let start=new Date(d.startDate);
+      let end=new Date(start);
+      end.setDate(start.getDate()+Number(d.days));
+      if(today>end){
+        db.ref("bookings/"+id).update({status:"Completed"});
+      }
+    });
+  });
+}
+
+// ---------- ROW HTML ----------
+function rowHTML(id,d){
+  let status=d.status||"Active";
+  let actionButton = status==="Cancelled"
+    ? `<button onclick="restoreBooking('${id}')">Restore</button>`
+    : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
+  return `<tr>
+<td>${id}</td>
+<td><a href="#" onclick="loadCustomerProfile('${d.phone}')" style="color:#38bdf8;text-decoration:none;font-weight:bold">${d.name||''}</a></td>
+<td>${d.phone||''}</td>
+<td>${d.console||''}</td>
+<td>${d.startDate||''}</td>
+<td>${d.days||''}</td>
+<td>₹${d.finalPrice||0}</td>
+<td>${status}</td>
+<td>${actionButton}</td>
+<td><button onclick="markBargainer('${d.phone}')" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">⚠️ Bargainer</button><br><button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
+</tr>`;
+}
+
+// ---------- LOAD FUNCTIONS ----------
+function loadRecent(){ 
+  db.ref("bookings").limitToLast(5).on("value",snap=>{
+    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
+    snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
+    document.getElementById("recentTable").innerHTML=html;
+  }); 
+}
+
+function searchBooking(){ 
+  let val=document.getElementById("searchBox").value.toLowerCase();
+  db.ref("bookings").once("value",snap=>{
+    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
+    snap.forEach(c=>{
+      let d=c.val();
+      if(c.key.toLowerCase().includes(val)||(d.name||"").toLowerCase().includes(val)){
+        html+=rowHTML(c.key,d);
+      }
+    });
+    document.getElementById("searchTable").innerHTML=html;
+  }); 
+}
+
+// ---------- CANCEL / RESTORE / DELETE ----------
+function cancelBooking(id){if(confirm("Cancel booking?")) db.ref("bookings/"+id).update({status:"Cancelled"});}
+function restoreBooking(id){db.ref("bookings/"+id).update({status:"Active"});}
+function deleteBooking(id){if(confirm("Permanently delete booking?")) db.ref("bookings/"+id).remove();}
+
+// ---------- 10 DAYS PERFORMANCE ----------
+function tenDays(){ 
+  let total=0,count=0; 
+  let today=new Date(); 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(d.status!=="Completed") return; 
+      let end=new Date(d.startDate); 
+      end.setDate(end.getDate()+Number(d.days||0)); 
+      let diff=(today-end)/(1000*60*60*24); 
+      if(diff<=10 && diff>=0){total+=Number(d.finalPrice||0);count++;} 
+    }); 
+    document.getElementById("tenDaysData").innerHTML=`Total Completed: ${count}<br>Total Earnings: ₹${total}`; 
+  }); 
+}
+
+// ---------- POPULATE SELECTORS ----------
+function populateSelectors(){ 
+  for(let m=1;m<=12;m++){ 
+    document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`; 
+    document.getElementById("reviewMonthSelect").innerHTML+=`<option value="${m}">${m}</option>`; 
+  } 
+  let currentYear=new Date().getFullYear(); 
+  for(let y=currentYear;y>=2023;y--){ 
+    document.getElementById("yearSelect").innerHTML+=`<option>${y}</option>`; 
+    document.getElementById("yearOnlySelect").innerHTML+=`<option>${y}</option>`; 
+    document.getElementById("reviewYearSelect").innerHTML+=`<option>${y}</option>`; 
+    document.getElementById("deleteYearSelect").innerHTML+=`<option>${y}</option>`; 
+  } 
+}
+
+// ---------- MONTHLY & YEARLY ----------
+function calculateMonthly(){ 
+  let m=monthSelect.value; let y=yearSelect.value; 
+  let total=0,completed=0,cancelled=0; 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(!d.startDate) return; 
+      let bd=new Date(d.startDate); 
+      if((bd.getMonth()+1)==m && bd.getFullYear()==y){ 
+        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;} 
+        if(d.status==="Cancelled") cancelled++; 
+      } 
+    }); 
+    monthlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`; 
+  }); 
+}
+
+function calculateYearly(){ 
+  let y=yearOnlySelect.value; 
+  let total=0,completed=0,cancelled=0; 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(!d.startDate) return; 
+      let bd=new Date(d.startDate); 
+      if(bd.getFullYear()==y){ 
+        if(d.status==="Completed"){total+=Number(d.finalPrice||0);completed++;} 
+        if(d.status==="Cancelled") cancelled++; 
+      } 
+    }); 
+    yearlyResult.innerHTML=`Completed: ${completed}<br>Cancelled: ${cancelled}<br>Revenue: ₹${total}`; 
+  }); 
+}
+
+// ---------- DELETE ----------
+function deleteReviewsByMonth(){ 
+  let m=document.getElementById("reviewMonthSelect").value; 
+  let y=document.getElementById("reviewYearSelect").value; 
+  if(!confirm("Are you sure?")) return; 
+  let deletedCount=0; 
+  db.ref("reviews").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(!d.timestamp) return; 
+      let reviewDate=new Date(d.timestamp); 
+      if((reviewDate.getMonth()+1)==m && reviewDate.getFullYear()==y){ 
+        db.ref("reviews/"+c.key).remove(); 
+        deletedCount++; 
+      } 
+    }); 
+    document.getElementById("deleteReviewResult").innerHTML=`Deleted Reviews: ${deletedCount}`; 
+  }); 
+}
+
+function deleteBookingsByYear(){ 
+  let y=document.getElementById("deleteYearSelect").value; 
+  if(!confirm("Delete ALL bookings for selected year?")) return; 
+  let deletedCount=0; 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(!d.startDate) return; 
+      let bookingDate=new Date(d.startDate); 
+      if(bookingDate.getFullYear()==y){ 
+        db.ref("bookings/"+c.key).remove(); 
+        deletedCount++; 
+      } 
+    }); 
+    document.getElementById("deleteYearResult").innerHTML=`Deleted Bookings: ${deletedCount}`; 
+  }); 
+}
+
+// ---------- VIP ----------
+function loadVIP(){ 
+  let customerCount={}; 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(!d.phone) return; 
+      let key=d.phone; 
+      if(!customerCount[key]) customerCount[key]={name:d.name||"Unknown",phone:d.phone,count:0}; 
+      customerCount[key].count++; 
+    }); 
+    let arr=Object.values(customerCount); 
+    arr.sort((a,b)=>b.count-a.count); 
+    let top3=arr.slice(0,3); 
+    let html="<ol>"; 
+    top3.forEach(c=>{html+=`<li><b>${c.name}</b> (${c.phone}) - ${c.count} bookings</li>`}); 
+    html+="</ol>"; 
+    document.getElementById("vipResult").innerHTML=html; 
+  }); 
+}
+
+// ---------- CUSTOMER PROFILE ----------
+function loadCustomerProfile(phone){ 
+  if(!phone){alert("Phone not found");return;} 
+  let totalSpent=0,totalBookings=0,completed=0,cancelled=0; 
+  let historyHTML="<h3>Booking History</h3><ul>"; 
+  db.ref("bookings").once("value",snap=>{ 
+    snap.forEach(c=>{ 
+      let d=c.val(); 
+      if(d.phone===phone){ 
+        totalBookings++; 
+        if(d.status==="Completed"){completed++;totalSpent+=Number(d.finalPrice||0);} 
+        if(d.status==="Cancelled") cancelled++; 
+        historyHTML+=`<li>${d.startDate} - ${d.console} - ₹${d.finalPrice} - ${d.status}</li>`; 
+      } 
+    }); 
+    historyHTML+="</ul>"; 
+    let loyalty="Bronze";if(totalSpent>5000) loyalty="Silver";if(totalSpent>15000) loyalty="Gold 👑";if(totalSpent>30000) loyalty="Platinum 💎"; 
+    db.ref("customerNotes/"+phone).once("value",noteSnap=>{ 
+      let tag="None"; 
+      if(noteSnap.exists()){tag=noteSnap.val().tag;} 
+      document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`; 
+    }); 
+  }); 
+}
+
+// ---------- BARGAINER ----------
+function markBargainer(phone){ 
+  if(!phone){alert("Phone number not found");return;} 
+  db.ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()}).then(()=>{alert("Customer saved as Bargainer. Next time you will get alert.");}); 
+}
+
+// ---------- TODAY ANALYTICS ----------
+function loadTodayAnalytics(){ 
+  const todayKey=new Date().toISOString().split("T")[0]; 
+  db.ref("dailyVisitors/"+todayKey).once("value").then(snapshot=>{ 
+    let totalVisitors=0,bookedCount=0,notBookedCount=0,totalTimeSpent=0; 
+    snapshot.forEach(child=>{ 
+      totalVisitors++; 
+      const data=child.val(); 
+      if(data.booked) bookedCount++; else notBookedCount++; 
+      totalTimeSpent+=data.totalTime||0; 
+    }); 
+    document.getElementById("totalVisitors").innerText=totalVisitors; 
+    document.getElementById("bookedVisitors").innerText=bookedCount; 
+    document.getElementById("notBookedVisitors").innerText=notBookedCount; 
+    document.getElementById("totalTimeSpent").innerText=Math.floor(totalTimeSpent/60000)+" Minutes"; 
+  }); 
+}
+
+function loadTopVisitors(){ 
+  const todayKey=new Date().toISOString().split("T")[0]; 
+  db.ref("dailyVisitors/"+todayKey).orderByChild("visits").limitToLast(5).once("value").then(snapshot=>{ 
+    let html="<ol>"; 
+    snapshot.forEach(child=>{ 
+      const data=child.val(); 
+      html+=`<li>${child.key} - ${data.visits} visits</li>`; 
+    }); 
+    html+="</ol>"; 
+    document.getElementById("topVisitors").innerHTML=html; 
+  }); 
+}
+
+
+
+    
+
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+    
+
+
+ 
+
+
+  
+
+
+
+        
+</script>
+</body>
+</html>
+
+
+
+
+
+                                      
+
+
+  
+                  
+  
+
+
+
+
+
+
+  
+  
