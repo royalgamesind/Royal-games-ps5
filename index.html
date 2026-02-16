@@ -462,14 +462,31 @@ function loadCustomerProfile(phone){
              if(totalSpent>15000) loyalty="Gold 👑";
              if(totalSpent>30000) loyalty="Platinum 💎"; 
         }
+      // Update this specific part inside loadCustomerProfile(phone)
+db.ref("customerNotes/" + phone).once("value", noteSnap => {
+  let tag = "None";
+  let clearBtn = ""; 
+  
+  if (noteSnap.exists()) {
+    tag = noteSnap.val().tag;
+    // Add a button to clear the tag if one exists
+    clearBtn = `<button onclick="clearBargainerTag('${phone}')" style="background:#6b7280; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left:10px; cursor:pointer;">Clear Tag</button>`;
+  }
+  
+  document.getElementById("customerProfile").innerHTML = `
+    <b>Phone:</b> ${phone}<br>
+    <b>Total Bookings:</b> ${totalBookings}<br>
+    <b>Completed:</b> ${completed}<br>
+    <b>Cancelled:</b> ${cancelled}<br>
+    <b>Total Spent:</b> ₹${totalSpent}<br>
+    <b>Loyalty Level:</b> ${loyalty}<br>
+    <b>Special Tag:</b> <span style="color:${tag === 'BARGAINER' ? '#f87171' : 'inherit'}">${tag}</span> ${clearBtn}<br><br>
+    ${historyHTML}
+  `;
+});
 
-        db.ref("customerNotes/"+phone).once("value",noteSnap=>{ 
-          let tag="None"; 
-          if(noteSnap.exists()){tag=noteSnap.val().tag;} 
-          document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`; 
-        }); 
-    });
-  }); 
+        
+
 }
 
 // ---------- BARGAINER ----------
@@ -507,6 +524,24 @@ function loadTopVisitors(){
     html+="</ol>"; 
     document.getElementById("topVisitors").innerHTML=html; 
   }); 
+}
+  // Function to remove the Bargainer tag
+function clearBargainerTag(phone) {
+  if (!phone) {
+    alert("Phone number not found");
+    return;
+  }
+  
+  if (confirm("Are you sure you want to remove the tag for this customer?")) {
+    db.ref('customerNotes/' + phone).remove().then(() => {
+      alert("Tag removed successfully!");
+      // If the profile is open, refresh it to show the change
+      loadCustomerProfile(phone);
+    }).catch((error) => {
+      console.error("Error removing tag:", error);
+      alert("Failed to remove tag.");
+    });
+  }
 }
 </script>
 </body>
