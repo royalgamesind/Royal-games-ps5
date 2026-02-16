@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Royal Games Admin - God-Level AI</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -26,12 +25,14 @@ th{color:#facc15}
 #loginBox{position:fixed;inset:0;background:linear-gradient(135deg,#0b0f1a,#111827);
 display:flex;align-items:center;justify-content:center;z-index:9999}
 
-
+/* GOD MODE STYLES */
+.god-panel { border: 2px solid gold; background: linear-gradient(145deg, #1e293b, #0f172a); }
+.control-group { display:flex; flex-wrap:wrap; gap:15px; align-items: center; }
+.control-item { background: #0b0f1a; padding: 10px; border-radius: 10px; border: 1px solid #374151; text-align: center; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN BOX -->
 <div id="loginBox">
 <div style="background:#111827;padding:40px;border-radius:20px;width:320px;text-align:center;border:2px solid gold;box-shadow:0 0 25px rgba(255,215,0,.3)">
 <h2 style="color:gold">👑 Royal Admin</h2>
@@ -43,7 +44,44 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 
 <h1>Royal Games Dashboard</h1>
 
-<!-- SEARCH BOOKING -->
+<div class="section card god-panel">
+  <h3>⚡ LIVE GOD MODE CONTROLS</h3>
+  <div class="control-group">
+    <div class="control-item">
+      <label>Surge Price (Multiplier)</label><br>
+      <input type="number" id="surgeValue" step="0.1" value="1.0" style="width:60px">
+      <button onclick="updateSurge()">Apply</button>
+    </div>
+    <div class="control-item">
+      <label>Ghost Alerts</label><br>
+      <button id="ghostBtn" onclick="toggleGhostMode()">OFF</button>
+    </div>
+    <div class="control-item">
+      <label>PS5 Lock</label><br>
+      <button id="ps5LockBtn" onclick="toggleLock('ps5')">Active</button>
+    </div>
+    <div class="control-item">
+      <label>Xbox Lock</label><br>
+      <button id="xboxLockBtn" onclick="toggleLock('xbox')">Active</button>
+    </div>
+  </div>
+</div>
+
+<div class="section card" style="border: 1px solid #3b82f6;">
+    <h3 style="color:#3b82f6">👑 Manual Customer Level</h3>
+    <p style="font-size:12px; color:gray">Force a customer to Gold/Platinum immediately.</p>
+    <div style="display:flex; gap:10px;">
+        <input type="text" id="levelPhone" placeholder="Phone Number">
+        <select id="levelSelect">
+            <option value="Bronze">Bronze</option>
+            <option value="Silver">Silver</option>
+            <option value="Gold">Gold</option>
+            <option value="Platinum">Platinum</option>
+        </select>
+        <button onclick="forceUpdateLevel()" style="background:#3b82f6; color:white;">Update Level</button>
+    </div>
+</div>
+
 <div class="section card">
 <h2>Search Booking</h2>
 <input type="text" id="searchBox" placeholder="Enter Name or Booking ID">
@@ -53,7 +91,6 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 </div>
 </div>
 
-<!-- RECENT BOOKINGS -->
 <div class="section card">
 <h2>Recent 5 Bookings</h2>
 <div class="table-box">
@@ -61,7 +98,6 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 </div>
 </div>
 
-<!-- ANALYTICS -->
 <div class="section card">
 <h2>📊 Today Website Analytics</h2>
 <p>Total Visitors: <b><span id="totalVisitors">0</span></b></p>
@@ -72,14 +108,12 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 <div id="topVisitors"></div>
 </div>
 
-<!-- VIP CUSTOMERS -->
 <div class="section card">
 <h2>Top 3 VIP Customers</h2>
 <button onclick="loadVIP()">Show VIP</button>
 <div id="vipResult"></div>
 </div>
 
-<!-- CUSTOMER PROFILE -->
 <div class="section card">
 <h2>Customer Profile</h2>
 <div id="customerProfile">
@@ -87,13 +121,11 @@ Select a customer to view profile
 </div>
 </div>
 
-<!-- LAST 10 DAYS PERFORMANCE -->
 <div class="section card">
 <h2>Last 10 Days Performance</h2>
 <div id="tenDaysData"></div>
 </div>
 
-<!-- MONTHLY PERFORMANCE -->
 <div class="section card">
 <h2>Monthly Performance</h2>
 <select id="monthSelect"></select>
@@ -102,7 +134,6 @@ Select a customer to view profile
 <div id="monthlyResult"></div>
 </div>
 
-<!-- YEARLY PERFORMANCE -->
 <div class="section card">
 <h2>Yearly Performance</h2>
 <select id="yearOnlySelect"></select>
@@ -110,7 +141,6 @@ Select a customer to view profile
 <div id="yearlyResult"></div>
 </div>
 
-<!-- DELETE BOOKINGS BY YEAR -->
 <div class="section card">
 <h2>Delete Bookings By Year</h2>
 <select id="deleteYearSelect"></select>
@@ -118,7 +148,6 @@ Select a customer to view profile
 <div id="deleteYearResult"></div>
 </div>
 
-<!-- DELETE REVIEWS BY MONTH -->
 <div class="section card">
 <h2>Delete Reviews By Month</h2>
 <select id="reviewMonthSelect"></select>
@@ -126,8 +155,6 @@ Select a customer to view profile
 <button onclick="deleteReviewsByMonth()">Delete Reviews</button>
 <div id="deleteReviewResult"></div>
 </div>
-
-
 
 <script>
 // FIREBASE CONFIG
@@ -155,16 +182,63 @@ function checkPassword(){
       populateSelectors();
       loadTodayAnalytics();
       loadTopVisitors();
+      loadControlStates(); // Load God Mode controls
     } catch(err){
       console.error("Dashboard Load Error:", err);
       alert("Error loading dashboard. Check console for details.");
     }
-    document.getElementById("aiInput").addEventListener("keypress", function(e){
-      if(e.key==="Enter") sendAI();
-    });
   } else {
     document.getElementById("loginError").innerText="Wrong Password";
   }
+}
+
+// ---------- NEW: GOD MODE FUNCTIONS ----------
+function loadControlStates(){
+    db.ref('remoteControl').on('value', snap => {
+        const data = snap.val() || {};
+        document.getElementById('surgeValue').value = data.surge || 1.0;
+        
+        const gBtn = document.getElementById('ghostBtn');
+        gBtn.innerText = data.ghostMode ? "ON" : "OFF";
+        gBtn.style.background = data.ghostMode ? "#4ade80" : "gold";
+        
+        const psBtn = document.getElementById('ps5LockBtn');
+        psBtn.innerText = data.ps5Locked ? "LOCKED" : "ACTIVE";
+        psBtn.style.background = data.ps5Locked ? "#ef4444" : "#4ade80";
+        
+        const xbBtn = document.getElementById('xboxLockBtn');
+        xbBtn.innerText = data.xboxLocked ? "LOCKED" : "ACTIVE";
+        xbBtn.style.background = data.xboxLocked ? "#ef4444" : "#4ade80";
+    });
+}
+
+function updateSurge(){
+    const val = parseFloat(document.getElementById('surgeValue').value);
+    db.ref('remoteControl/surge').set(val);
+    alert("Surge Pricing Updated!");
+}
+
+function toggleGhostMode(){
+    db.ref('remoteControl/ghostMode').once('value', s => db.ref('remoteControl/ghostMode').set(!s.val()));
+}
+
+function toggleLock(type){
+    const path = `remoteControl/${type}Locked`;
+    db.ref(path).once('value', s => db.ref(path).set(!s.val()));
+}
+
+// ---------- NEW: MANUAL LEVEL UPDATE ----------
+function forceUpdateLevel(){
+    const phone = document.getElementById('levelPhone').value;
+    const level = document.getElementById('levelSelect').value;
+    if(!phone) return alert("Enter phone number");
+    
+    db.ref("customerStats/" + phone).update({
+        level: level,
+        lastUpdatedBy: "Admin_Manual"
+    }).then(() => {
+        alert(`Success! User ${phone} marked as ${level}.`);
+    });
 }
 
 // ---------- AUTO COMPLETE BOOKINGS ----------
@@ -193,7 +267,7 @@ function rowHTML(id,d){
     ? `<button onclick="restoreBooking('${id}')">Restore</button>`
     : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
   return `<tr>
-<td>${id}</td>
+<td>${id.slice(-4)}</td>
 <td><a href="#" onclick="loadCustomerProfile('${d.phone}')" style="color:#38bdf8;text-decoration:none;font-weight:bold">${d.name||''}</a></td>
 <td>${d.phone||''}</td>
 <td>${d.console||''}</td>
@@ -202,14 +276,14 @@ function rowHTML(id,d){
 <td>₹${d.finalPrice||0}</td>
 <td>${status}</td>
 <td>${actionButton}</td>
-<td><button onclick="markBargainer('${d.phone}')" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">⚠️ Bargainer</button><br><button class="delete" onclick="deleteBooking('${id}')">Delete</button></td>
+<td><button onclick="markBargainer('${d.phone}')" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:8px;margin-bottom:6px;">⚠️</button> <button class="delete" onclick="deleteBooking('${id}')">Del</button></td>
 </tr>`;
 }
 
 // ---------- LOAD FUNCTIONS ----------
 function loadRecent(){ 
   db.ref("bookings").limitToLast(5).on("value",snap=>{
-    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
+    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Ops</th></tr>`;
     snap.forEach(c=>{html+=rowHTML(c.key,c.val());});
     document.getElementById("recentTable").innerHTML=html;
   }); 
@@ -218,7 +292,7 @@ function loadRecent(){
 function searchBooking(){ 
   let val=document.getElementById("searchBox").value.toLowerCase();
   db.ref("bookings").once("value",snap=>{
-    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Delete</th></tr>`;
+    let html=`<tr><th>ID</th><th>Name</th><th>Phone</th><th>Console</th><th>Date</th><th>Days</th><th>Final</th><th>Status</th><th>Action</th><th>Ops</th></tr>`;
     snap.forEach(c=>{
       let d=c.val();
       if(c.key.toLowerCase().includes(val)||(d.name||"").toLowerCase().includes(val)){
@@ -376,12 +450,25 @@ function loadCustomerProfile(phone){
       } 
     }); 
     historyHTML+="</ul>"; 
-    let loyalty="Bronze";if(totalSpent>5000) loyalty="Silver";if(totalSpent>15000) loyalty="Gold 👑";if(totalSpent>30000) loyalty="Platinum 💎"; 
-    db.ref("customerNotes/"+phone).once("value",noteSnap=>{ 
-      let tag="None"; 
-      if(noteSnap.exists()){tag=noteSnap.val().tag;} 
-      document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`; 
-    }); 
+    
+    // Check Manual Level Override first
+    db.ref("customerStats/"+phone).once("value", statSnap => {
+        let stats = statSnap.val() || {};
+        let loyalty = stats.level || "Bronze";
+        
+        // If no manual level, calculate standard logic
+        if(!stats.level) {
+             if(totalSpent>5000) loyalty="Silver";
+             if(totalSpent>15000) loyalty="Gold 👑";
+             if(totalSpent>30000) loyalty="Platinum 💎"; 
+        }
+
+        db.ref("customerNotes/"+phone).once("value",noteSnap=>{ 
+          let tag="None"; 
+          if(noteSnap.exists()){tag=noteSnap.val().tag;} 
+          document.getElementById("customerProfile").innerHTML=`<b>Phone:</b> ${phone}<br><b>Total Bookings:</b> ${totalBookings}<br><b>Completed:</b> ${completed}<br><b>Cancelled:</b> ${cancelled}<br><b>Total Spent:</b> ₹${totalSpent}<br><b>Loyalty Level:</b> ${loyalty}<br><b>Special Tag:</b> ${tag}<br><br>${historyHTML}`; 
+        }); 
+    });
   }); 
 }
 
@@ -421,38 +508,18 @@ function loadTopVisitors(){
     document.getElementById("topVisitors").innerHTML=html; 
   }); 
 }
-
-
-
-    
-
-  
-  
-  
-  
-  
-  
-  
-  
+</script>
+</body>
+  </html>
 
 
 
 
 
-    
-
-
- 
-
-
-  
 
 
 
         
-</script>
-</body>
-</html>
 
 
 
