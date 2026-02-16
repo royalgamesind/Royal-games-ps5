@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS God-Mode | Royal Admin</title>
+    <title>JARVIS God-Mode | Royal Admin 2.0</title>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,355 +11,215 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        :root { --gold: #d4af37; --bg: #050505; --card: #111; --text: #e0e0e0; --danger: #ef4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        :root { --gold: #d4af37; --bg: #030303; --panel: #0d0d0d; --text: #f0f0f0; --danger: #ff4747; }
+        body { background: var(--bg); color: var(--text); font-family: 'Orbitron', sans-serif; margin: 0; overflow-x: hidden; }
         
-        /* LOGIN SHIELD */
-        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .login-box { text-align: center; border: 1px solid var(--gold); padding: 40px; border-radius: 20px; background: #0a0a0a; box-shadow: 0 0 30px var(--gold); }
-        .login-box input { background: #000; border: 1px solid var(--gold); color: #fff; padding: 12px; border-radius: 8px; width: 250px; text-align: center; outline: none; font-size: 1.1rem; }
+        /* --- GOD-LEVEL LOGIN --- */
+        #loginOverlay { position: fixed; inset: 0; background: radial-gradient(circle, #111, #000); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s; }
+        .login-card { background: #080808; border: 2px solid var(--gold); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.2); }
+        .login-card h1 { color: var(--gold); letter-spacing: 5px; margin-bottom: 30px; }
+        .login-card input { background: #000; border: 1px solid #333; color: var(--gold); padding: 15px; width: 280px; text-align: center; border-radius: 10px; font-size: 1.2rem; outline: none; transition: 0.3s; }
+        .login-card input:focus { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
+        #loginMsg { margin-top: 15px; font-size: 0.9rem; font-weight: bold; min-height: 20px; }
 
-        /* DASHBOARD LAYOUT */
-        .dashboard { padding: 25px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1650px; margin: 0 auto; opacity: 0; transition: 1s; }
-        .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid #222; position: relative; }
-        .span-2 { grid-column: span 2; }
-        .span-3 { grid-column: span 3; }
-        .span-4 { grid-column: span 4; }
+        /* --- DASHBOARD GRID --- */
+        .dashboard { display: grid; grid-template-columns: 350px 1fr 1fr 1fr; grid-template-rows: auto auto auto; gap: 20px; padding: 25px; opacity: 0; transform: translateY(20px); transition: 1s ease-out; }
+        .card { background: var(--panel); border: 1px solid #222; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        
+        /* JARVIS PANEL */
+        .jarvis-sidebar { grid-row: span 3; border: 1px solid var(--gold); display: flex; flex-direction: column; height: 90vh; }
+        .orb-box { text-align: center; padding: 20px; border-bottom: 1px solid #222; }
+        .orb { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, var(--gold) 20%, transparent 70%); box-shadow: 0 0 30px var(--gold); margin: 0 auto; cursor: pointer; }
+        .orb.listening { animation: pulse 1s infinite; background: radial-gradient(circle, #ff0000 20%, transparent 70%); box-shadow: 0 0 30px #ff0000; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .bubble { padding: 10px 15px; border-radius: 15px; max-width: 85%; font-size: 0.85rem; line-height: 1.4; }
+        .ai { align-self: flex-start; background: #1a1a1a; border-left: 3px solid var(--gold); }
+        .user { align-self: flex-end; background: var(--gold); color: #000; font-weight: 500; }
+        
+        /* STATS */
+        .stat-card { text-align: center; }
+        .stat-card h4 { margin: 0; color: #888; font-size: 0.7rem; text-transform: uppercase; }
+        .stat-card .val { font-size: 2.2rem; font-weight: bold; color: var(--gold); margin: 5px 0; }
 
-        /* JARVIS INTERFACE */
-        .jarvis-container { grid-column: span 1; grid-row: span 3; display: flex; flex-direction: column; border: 1px solid var(--gold); background: #080808; height: 1000px; }
-        .orb-area { padding: 20px; text-align: center; border-bottom: 1px solid #222; }
-        .orb { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, var(--gold) 0%, transparent 70%); box-shadow: 0 0 25px var(--gold); margin: 0 auto; cursor: pointer; }
-        .orb.listening { background: radial-gradient(circle, #ff0000 0%, transparent 70%); box-shadow: 0 0 25px #ff0000; animation: pulse 1s infinite; }
+        /* DATA TABLES */
+        .table-area { grid-column: span 3; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: var(--gold); font-size: 0.75rem; padding: 15px; border-bottom: 1px solid #333; }
+        td { padding: 15px; border-bottom: 1px solid #111; font-size: 0.85rem; }
+        .btn-del { color: var(--danger); background: none; border: 1px solid var(--danger); padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .btn-del:hover { background: var(--danger); color: white; }
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        #chatDisplay { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; }
-        .msg { padding: 10px; border-radius: 10px; max-width: 85%; line-height: 1.4; }
-        .user-msg { align-self: flex-end; background: #1a1a1a; color: var(--gold); border: 1px solid var(--gold); }
-        .ai-msg { align-self: flex-start; background: #111; border: 1px solid #333; }
-
-        /* TABLES & TOOLS */
-        .table-box { max-height: 400px; overflow-y: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { color: var(--gold); text-align: left; padding: 12px; border-bottom: 2px solid #222; font-size: 0.8rem; }
-        td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem; }
-        input, select, button { background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 10px; border-radius: 8px; }
-        button { background: var(--gold); color: #000; font-weight: bold; cursor: pointer; border: none; }
-        button.danger { background: var(--danger); color: white; }
-        
-        .stat-val { font-size: 2rem; font-weight: bold; color: var(--gold); }
-        .badge-loyalty { color: gold; font-weight: bold; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <div class="login-box">
-        <h1 style="color:var(--gold); margin-bottom:20px;">ROYAL SYSTEM ACCESS</h1>
-        <input type="password" id="adminPass" placeholder="Enter Access Code..." onkeydown="if(event.key==='Enter') checkPassword()">
+    <div class="login-card">
+        <h1>JARVIS AUTH</h1>
+        <input type="password" id="passInput" placeholder="Enter Access Code..." onkeydown="if(event.key==='Enter') verify()">
+        <div id="loginMsg"></div>
     </div>
 </div>
 
 <div class="dashboard" id="mainDash">
-    
-    <div class="card"><p style="margin:0; font-size:0.7rem;">TOTAL REVENUE</p><div class="stat-val" id="totalRev">₹0</div></div>
-    <div class="card"><p style="margin:0; font-size:0.7rem;">TODAY VISITORS</p><div class="stat-val" id="totalVisitors">0</div></div>
-    <div class="card"><p style="margin:0; font-size:0.7rem;">PS5 EARNINGS</p><div class="stat-val" id="psIncome">₹0</div></div>
-    <div class="card"><p style="margin:0; font-size:0.7rem;">STATUS</p><div class="stat-val" style="font-size:1.2rem">SECURE <i class="fas fa-shield-virus"></i></div></div>
-
-    <div class="card jarvis-container">
-        <div class="orb-area">
+    <div class="card jarvis-sidebar">
+        <div class="orb-box">
             <div class="orb" id="orb" onclick="startVoice()"></div>
-            <p id="jarvisStatus" style="font-size:0.7rem; color:var(--gold); margin-top:10px;">JARVIS 2026 ONLINE</p>
+            <p style="color:var(--gold); font-size: 0.6rem; margin-top:10px;">CORE INTEL SYNCED</p>
         </div>
-        <div id="chatDisplay">
-            <div class="msg ai-msg">Waiting for command, Sir. Database and Analytics are synced.</div>
+        <div id="chatBox">
+            <div class="bubble ai">All systems online, Sir. Awaiting your authorization.</div>
         </div>
-        <div class="chat-input" style="display:flex; padding:10px; gap:5px; border-top:1px solid #222;">
-            <input type="text" id="aiInput" placeholder="Talk to JARVIS..." style="flex:1" onkeydown="if(event.key==='Enter') sendChat()">
-            <button onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <div class="card span-3">
-        <h3 style="color:var(--gold); margin-top:0;">Database Search</h3>
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="searchBox" placeholder="Name or Booking ID" style="flex:1">
-            <button onclick="searchBooking()"><i class="fas fa-search"></i> Search</button>
-        </div>
-        <div class="table-box">
-            <table id="searchTable"></table>
+        <div style="padding:15px; border-top:1px solid #222; display:flex; gap:5px;">
+            <input type="text" id="aiIn" placeholder="Type command..." style="flex:1; background:#000; border:1px solid #333; color:white; padding:8px; border-radius:5px;">
+            <button onclick="sendChat()" style="background:var(--gold); border:none; border-radius:5px; padding:0 15px; cursor:pointer;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <div class="card span-3">
-        <h3 style="color:var(--gold); margin-top:0;">Recent Activity</h3>
-        <div class="table-box">
-            <table id="recentTable"></table>
+    <div class="card stat-card"><p>TOTAL REVENUE</p><div class="val" id="totalRev">₹0</div></div>
+    <div class="card stat-card"><p>PS5 EARNINGS</p><div class="val" style="color:#38bdf8" id="psRev">₹0</div></div>
+    <div class="card stat-card"><p>TOTAL BOOKINGS</p><div class="val" style="color:#4ade80" id="totalCount">0</div></div>
+
+    <div class="card table-area">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="color:var(--gold);">Live Database Stream</h3>
+            <input type="text" id="search" onkeyup="searchTable()" placeholder="Search bookings..." style="background:#000; border:1px solid #333; color:white; padding:8px; border-radius:5px; width:300px;">
         </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Booking ID</th>
+                    <th>Console</th>
+                    <th>Price</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+        </table>
     </div>
 
-    <div class="card span-2">
-        <h3 style="color:var(--gold);">Customer Profile</h3>
-        <div id="customerProfile" style="background:#000; padding:15px; border-radius:10px; border:1px solid #333;">
-            Select a customer from the table to analyze.
-        </div>
+    <div class="card span-3" style="grid-column: span 3;">
+        <canvas id="revChart" style="height: 250px;"></canvas>
     </div>
-
-    <div class="card span-1">
-        <h3 style="color:var(--gold);">VIP Status</h3>
-        <button onclick="loadVIP()" style="width:100%">Reload VIP List</button>
-        <div id="vipResult" style="margin-top:10px; font-size:0.85rem;"></div>
-    </div>
-
-    <div class="card span-1">
-        <h3 style="color:var(--gold);">10 Days Flow</h3>
-        <div id="tenDaysData" class="stat-val" style="font-size:1.2rem;">₹0</div>
-    </div>
-
-    <div class="card span-4" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px;">
-        <div>
-            <p style="font-size:0.7rem;">MONTHLY REVENUE</p>
-            <select id="monthSelect"></select>
-            <select id="yearSelect"></select>
-            <button onclick="calculateMonthly()">Check</button>
-            <div id="monthlyResult" style="margin-top:5px; font-size:0.8rem"></div>
-        </div>
-        <div>
-            <p style="font-size:0.7rem;">YEARLY TOTAL</p>
-            <select id="yearOnlySelect"></select>
-            <button onclick="calculateYearly()">Process</button>
-            <div id="yearlyResult" style="margin-top:5px; font-size:0.8rem"></div>
-        </div>
-        <div>
-            <p style="font-size:0.7rem; color:var(--danger)">PURGE DATA BY YEAR</p>
-            <select id="deleteYearSelect"></select>
-            <button class="danger" onclick="deleteBookingsByYear()">WIPE DATA</button>
-        </div>
-        <div>
-            <p style="font-size:0.7rem;">REVIEW CLEANER</p>
-            <select id="reviewMonthSelect"></select>
-            <select id="reviewYearSelect"></select>
-            <button class="danger" onclick="deleteReviewsByMonth()">CLEAN</button>
-        </div>
-    </div>
-
 </div>
 
 <script>
-    // FIREBASE SETUP
-    const firebaseConfig = {
-        apiKey: "AIzaSyBRuy9084wz4HwBJbdNuleC4suYi0zycNA",
-        databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
+    // 🔥 UPDATE YOUR CONFIG HERE
+    const firebaseConfig = { databaseURL: "https://royalgamesproject-default-rtdb.asia-southeast1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. LOGIN SYSTEM
-    function checkPassword(){
-        if(document.getElementById("adminPass").value.trim() === "Royal@2026"){
-            document.getElementById("loginOverlay").style.display="none";
-            document.getElementById("mainDash").style.opacity="1";
-            speak("Welcome back, Sir. All systems and business protocols are online.");
-            initDashboard();
+    // 1. FIXED LOGIN LOGIC
+    function verify() {
+        const input = document.getElementById("passInput");
+        const msg = document.getElementById("loginMsg");
+        
+        // Change "1234" to your preferred password
+        if (input.value === "Royal@2026") {
+            msg.style.color = "#4ade80";
+            msg.innerText = "ACCESS GRANTED. BOOTING SYSTEMS...";
+            setTimeout(() => {
+                document.getElementById("loginOverlay").style.opacity = "0";
+                setTimeout(() => document.getElementById("loginOverlay").style.display = "none", 800);
+                document.getElementById("mainDash").style.opacity = "1";
+                document.getElementById("mainDash").style.transform = "translateY(0)";
+                speak("Access granted. Welcome back, Sir.");
+                initData();
+            }, 1000);
         } else {
-            document.getElementById("loginStatus").innerText="Access Denied";
+            msg.style.color = "var(--danger)";
+            msg.innerText = "ACCESS DENIED. INCORRECT PROTOCOL.";
+            input.value = "";
+            input.style.borderColor = "var(--danger)";
+            speak("Incorrect password, Sir. Access is denied.");
+            setTimeout(() => { input.style.borderColor = "#333"; }, 1000);
         }
     }
 
-    // 2. JARVIS AI (VOICE & CHAT)
+    // 2. JARVIS AI (CHAT & VOICE)
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     function startVoice() {
         document.getElementById("orb").classList.add("listening");
         recognition.start();
     }
     recognition.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        processJarvis(text);
+        processJARVIS(e.results[0][0].transcript);
         document.getElementById("orb").classList.remove("listening");
     };
-    function sendChat() {
-        const input = document.getElementById("aiInput");
-        if(!input.value) return;
-        processJarvis(input.value);
-        input.value = "";
-    }
-    function processJarvis(query) {
-        const chat = document.getElementById("chatDisplay");
-        chat.innerHTML += `<div class="msg user-msg">${query}</div>`;
-        let reply = "Sir, that command is not in my protocol, but I have logged it.";
-        
-        if(query.toLowerCase().includes("revenue")) reply = `Total earnings stand at ${document.getElementById("totalRev").innerText}, Sir.`;
-        else if(query.toLowerCase().includes("visitor")) reply = `We have had ${document.getElementById("totalVisitors").innerText} visitors today.`;
-        else if(query.toLowerCase().includes("vip")) { reply = "Loading VIP customers now."; loadVIP(); }
-        else if(query.toLowerCase().includes("clean")) reply = "Please use the Maintenance panel below to purge database records, Sir.";
 
-        setTimeout(() => {
-            chat.innerHTML += `<div class="msg ai-msg">${reply}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-            speak(reply);
-        }, 500);
+    function sendChat() {
+        const input = document.getElementById("aiIn");
+        if(input.value) { processJARVIS(input.value); input.value = ""; }
     }
+
+    function processJARVIS(query) {
+        const box = document.getElementById("chatBox");
+        box.innerHTML += `<div class="bubble user">${query}</div>`;
+        
+        let response = "I am monitoring all systems, Sir.";
+        if(query.toLowerCase().includes("revenue")) response = `Total revenue is ${document.getElementById("totalRev").innerText}.`;
+        else if(query.toLowerCase().includes("delete")) response = "Sir, please use the red delete buttons in the table to purge records.";
+        
+        setTimeout(() => {
+            box.innerHTML += `<div class="bubble ai">${response}</div>`;
+            box.scrollTop = box.scrollHeight;
+            speak(response);
+        }, 600);
+    }
+
     function speak(txt) {
         const m = new SpeechSynthesisUtterance(txt);
-        m.pitch = 0.9; m.rate = 1;
+        m.rate = 1; m.pitch = 0.9;
         window.speechSynthesis.speak(m);
     }
 
-    // 3. CORE BUSINESS LOGIC (FROM YOUR FILE)
-    function initDashboard() {
-        autoCompleteBookings();
-        loadRecent();
-        tenDays();
-        populateSelectors();
-        loadTodayAnalytics();
-    }
+    // 3. DATABASE FUNCTIONS
+    function initData() {
+        db.ref("bookings").on("value", snap => {
+            const data = snap.val() || {};
+            const table = document.getElementById("dataTable");
+            let total = 0, ps = 0, count = 0;
+            table.innerHTML = "";
 
-    function rowHTML(id,d){
-        let status=d.status||"Active";
-        let action = status==="Cancelled" 
-            ? `<button onclick="restoreBooking('${id}')">Restore</button>` 
-            : `<button class="danger" onclick="cancelBooking('${id}')">Cancel</button>`;
-        return `<tr>
-            <td><a href="#" onclick="loadCustomerProfile('${d.phone}')" style="color:var(--gold); font-weight:bold">${d.name}</a></td>
-            <td style="font-size:0.7rem; color:#666">${id}</td>
-            <td>${d.console}</td>
-            <td style="color:var(--gold)">₹${d.finalPrice}</td>
-            <td>${d.startDate}</td>
-            <td><button class="danger" onclick="deleteBooking('${id}')"><i class="fas fa-trash"></i></button> ${action}</td>
-        </tr>`;
-    }
+            Object.entries(data).reverse().forEach(([id, b]) => {
+                total += Number(b.finalPrice || 0);
+                if(b.console.includes("PS5")) ps += Number(b.finalPrice || 0);
+                count++;
 
-    function loadRecent(){ 
-        db.ref("bookings").limitToLast(5).on("value",snap=>{
-            let html=`<tr><th>Name</th><th>ID</th><th>Console</th><th>Price</th><th>Date</th><th>Action</th></tr>`;
-            snap.forEach(c=>{ html+=rowHTML(c.key,c.val()); });
-            document.getElementById("recentTable").innerHTML=html;
-            updateGlobalRevenue(snap);
-        }); 
-    }
-
-    function updateGlobalRevenue(snap) {
-        let total = 0, ps = 0;
-        db.ref("bookings").once("value", s => {
-            s.forEach(child => {
-                let d = child.val();
-                total += Number(d.finalPrice || 0);
-                if(d.console && d.console.includes("PS5")) ps += Number(d.finalPrice || 0);
+                table.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold">${b.customerName}</td>
+                        <td style="font-family:monospace; color:#666">${id}</td>
+                        <td>${b.console}</td>
+                        <td style="color:var(--gold); font-weight:bold">₹${b.finalPrice}</td>
+                        <td>${b.startDate}</td>
+                        <td><button class="btn-del" onclick="deleteEntry('${id}')">DELETE</button></td>
+                    </tr>`;
             });
+
             document.getElementById("totalRev").innerText = "₹" + total;
-            document.getElementById("psIncome").innerText = "₹" + ps;
+            document.getElementById("psRev").innerText = "₹" + ps;
+            document.getElementById("totalCount").innerText = count;
         });
     }
 
-    function searchBooking(){ 
-        let val=document.getElementById("searchBox").value.toLowerCase();
-        db.ref("bookings").once("value",snap=>{
-            let html=`<tr><th>Name</th><th>ID</th><th>Console</th><th>Price</th><th>Date</th><th>Action</th></tr>`;
-            snap.forEach(c=>{
-                if(c.key.toLowerCase().includes(val)||(c.val().name||"").toLowerCase().includes(val)) html+=rowHTML(c.key,c.val());
-            });
-            document.getElementById("searchTable").innerHTML=html;
-        }); 
+    function deleteEntry(id) {
+        if(confirm("JARVIS: Are you sure you want to erase this data?")) {
+            db.ref("bookings").child(id).remove().then(() => speak("Record purged."));
+        }
     }
 
-    // ACTIONS
-    function cancelBooking(id){ if(confirm("Cancel?")) db.ref("bookings/"+id).update({status:"Cancelled"}); }
-    function restoreBooking(id){ db.ref("bookings/"+id).update({status:"Active"}); }
-    function deleteBooking(id){ if(confirm("Permanently delete?")) { db.ref("bookings/"+id).remove(); speak("Record purged."); } }
-
-    // CUSTOMER PROFILE
-    function loadCustomerProfile(phone){
-        db.ref("bookings").once("value",snap=>{
-            let spent=0, count=0;
-            snap.forEach(c=>{
-                if(c.val().phone===phone) { spent+=Number(c.val().finalPrice); count++; }
-            });
-            let loyalty="Bronze"; if(spent>15000) loyalty="Gold 👑"; if(spent>30000) loyalty="Platinum 💎";
-            document.getElementById("customerProfile").innerHTML = `
-                <b>Phone:</b> ${phone}<br><b>Total Visits:</b> ${count}<br>
-                <b>Spent:</b> ₹${spent}<br><b>Loyalty:</b> <span class="badge-loyalty">${loyalty}</span>
-                <br><button onclick="markBargainer('${phone}')" style="margin-top:10px; background:red; color:white;">Report Bargainer</button>
-            `;
+    function searchTable() {
+        let val = document.getElementById("search").value.toLowerCase();
+        document.querySelectorAll("#dataTable tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
         });
     }
-
-    function markBargainer(phone){ db.ref('customerNotes/'+phone).set({tag:"BARGAINER",timestamp:Date.now()}); alert("Logged."); }
-
-    // ANALYTICS & MAINTENANCE
-    function loadTodayAnalytics(){
-        const today=new Date().toISOString().split("T")[0];
-        db.ref("dailyVisitors/"+today).on("value", s => {
-            document.getElementById("totalVisitors").innerText = s.numChildren();
-        });
-    }
-
-    function tenDays(){
-        let total=0; let today=new Date();
-        db.ref("bookings").once("value",snap=>{
-            snap.forEach(c=>{
-                let d=c.val();
-                let end=new Date(d.startDate);
-                if((today-end)/(1000*60*60*24) <= 10) total+=Number(d.finalPrice);
-            });
-            document.getElementById("tenDaysData").innerText = "₹" + total;
-        });
-    }
-
-    function populateSelectors(){
-        for(let m=1;m<=12;m++) { document.getElementById("monthSelect").innerHTML+=`<option value="${m}">${m}</option>`; document.getElementById("reviewMonthSelect").innerHTML+=`<option value="${m}">${m}</option>`; }
-        let y=new Date().getFullYear();
-        for(let i=y;i>=2023;i--) { document.getElementById("yearSelect").innerHTML+=`<option>${i}</option>`; document.getElementById("yearOnlySelect").innerHTML+=`<option>${i}</option>`; document.getElementById("deleteYearSelect").innerHTML+=`<option>${i}</option>`; document.getElementById("reviewYearSelect").innerHTML+=`<option>${i}</option>`; }
-    }
-
-    function calculateMonthly(){
-        let m=monthSelect.value, y=yearSelect.value, rev=0;
-        db.ref("bookings").once("value",snap=>{
-            snap.forEach(c=>{
-                let d=c.val();
-                let date=new Date(d.startDate);
-                if((date.getMonth()+1)==m && date.getFullYear()==y) rev+=Number(d.finalPrice);
-            });
-            monthlyResult.innerText = "Monthly Rev: ₹" + rev;
-        });
-    }
-
-    function loadVIP(){
-        let counts={};
-        db.ref("bookings").once("value",snap=>{
-            snap.forEach(c=>{
-                let p=c.val().phone; if(!p) return;
-                counts[p] = (counts[p] || 0) + 1;
-            });
-            let sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
-            let h = sorted.map(x=>`<li>${x[0]} (${x[1]} bookings)</li>`).join("");
-            document.getElementById("vipResult").innerHTML = "<ul>"+h+"</ul>";
-        });
-    }
-
-    function autoCompleteBookings(){
-        let today=new Date();
-        db.ref("bookings").once("value",s=>{
-            s.forEach(c=>{
-                let d=c.val(); if(!d.startDate||d.status==="Cancelled") return;
-                let end=new Date(d.startDate); end.setDate(end.getDate()+Number(d.days));
-                if(today>end) db.ref("bookings/"+c.key).update({status:"Completed"});
-            });
-        });
-    }
-    
-    // DELETE HELPERS
-    function deleteBookingsByYear(){ if(confirm("Wipe entire year?")) { /* Logic from your file */ } }
-    function deleteReviewsByMonth(){ if(confirm("Clear reviews?")) { /* Logic from your file */ } }
-    function calculateYearly(){ /* Logic from your file */ }
-
 </script>
 </body>
-    </html>
-
-
-
-
-
-        
+</html>
 
     
