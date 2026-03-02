@@ -60,6 +60,71 @@ display:flex;align-items:center;justify-content:center;z-index:9999}
 <table id="recentTable"></table>
 </div>
 </div>
+  <!-- PREMIUM EDIT BOOKING SECTION -->
+<div class="section">
+<div class="card">
+<h2 style="color:gold;">🛠 Booking Editor</h2>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
+  <input type="text" id="editSearchID" placeholder="Enter Booking ID (RG...)" style="flex:1;min-width:200px;">
+  <button onclick="loadBookingForEdit()">Load Booking</button>
+</div>
+
+<div id="editSection" style="display:none;margin-top:15px;">
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+  <div>
+    <label style="color:#facc15;">Customer Name</label>
+    <input type="text" id="editName">
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Phone</label>
+    <input type="text" id="editPhone">
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Console</label>
+    <select id="editConsole">
+      <option>PS5</option>
+      <option>Xbox One</option>
+    </select>
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Start Date</label>
+    <input type="date" id="editStartDate">
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Days</label>
+    <input type="number" id="editDays">
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Final Amount (₹)</label>
+    <input type="number" id="editFinalPrice">
+  </div>
+
+  <div>
+    <label style="color:#facc15;">Status</label>
+    <select id="editStatus">
+      <option>Active</option>
+      <option>Completed</option>
+      <option>Cancelled</option>
+    </select>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;text-align:right;">
+  <button onclick="updateBookingData()" style="background:#22c55e;color:white;">💾 Save Changes</button>
+</div>
+
+</div>
+</div>
+  </div>
 
 <!-- ANALYTICS -->
 <div class="section card">
