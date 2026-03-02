@@ -522,7 +522,58 @@ function loadTopVisitors(){
     
 
 
- 
+ let editingBookingID = null;
+
+function loadBookingForEdit(){
+  const id = document.getElementById("editSearchID").value.trim();
+
+  if(!id){
+    alert("Enter Booking ID");
+    return;
+  }
+
+  db.ref("bookings/"+id).once("value").then(snap=>{
+    if(!snap.exists()){
+      alert("Booking not found!");
+      return;
+    }
+
+    const d = snap.val();
+    editingBookingID = id;
+
+    document.getElementById("editSection").style.display = "block";
+
+    document.getElementById("editName").value = d.name || "";
+    document.getElementById("editPhone").value = d.phone || "";
+    document.getElementById("editConsole").value = d.console || "PS5";
+    document.getElementById("editStartDate").value = d.startDate || "";
+    document.getElementById("editDays").value = d.days || "";
+    document.getElementById("editFinalPrice").value = d.finalPrice || "";
+    document.getElementById("editStatus").value = d.status || "Active";
+  });
+}
+
+function updateBookingData(){
+  if(!editingBookingID){
+    alert("Load a booking first!");
+    return;
+  }
+
+  const updatedData = {
+    name: document.getElementById("editName").value,
+    phone: document.getElementById("editPhone").value,
+    console: document.getElementById("editConsole").value,
+    startDate: document.getElementById("editStartDate").value,
+    days: document.getElementById("editDays").value,
+    finalPrice: Number(document.getElementById("editFinalPrice").value),
+    status: document.getElementById("editStatus").value
+  };
+
+  db.ref("bookings/"+editingBookingID).update(updatedData)
+  .then(()=>{
+    alert("Booking updated successfully 👑");
+  });
+    }
 
 
   
